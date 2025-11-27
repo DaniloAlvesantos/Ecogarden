@@ -1,30 +1,32 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Cookies from "universal-cookie";
 
-import { handleLogin } from "../../utils/auth";
+import Gnome from "../../assets/mascots/gnome-plate.png";
 import { LoginForm, type LoginFormData } from "../../components/forms/login";
 import { mascots } from "../../constants/login";
-import Gnome from "../../assets/mascots/gnome-plate.png";
+import { setEcoGardenClient } from "../../lib/ecoGarden";
+import { useAuthStore } from "../../stores/auth";
+import { handleLogin } from "../../utils/auth";
 
 import "./login.scss";
-import { useAuthStore } from "../../stores/auth";
-import Cookies from "universal-cookie";
-import { redirect } from "react-router-dom";
 
 export function LoginView() {
   const cookies = new Cookies();
+  const navigate = useNavigate();
   const [passwordVisible, setPasswordVisible] = useState(false);
   // Avoid unnecessary re-renders
   const [chosenMascot] = useState(
     mascots[Math.floor(Math.random() * mascots.length)]
   );
 
-  const { user, setUser } = useAuthStore();
+  const { user, setUser, loading } = useAuthStore();
 
   useEffect(() => {
-    if (user && user.email) {
-      redirect("/");
+    if (user && !loading) {
+      navigate("/dashboard");
     }
-  }, [user]);
+  }, [user, loading, navigate]);
 
   const handlePasswordVisible = () => {
     setPasswordVisible((prev) => !prev);
@@ -45,13 +47,20 @@ export function LoginView() {
     }
 
     const { token, currentUser, expires } = loginData;
-    console.log(expires);
 
     cookies.set("ecogarden-token", token, {
       expires,
     });
 
+    cookies.set("ecogarden-user", JSON.stringify(currentUser), {
+      expires,
+    });
+
+    setEcoGardenClient(token);
+
     setUser(currentUser);
+
+    navigate("/dashboard");
   };
 
   return (

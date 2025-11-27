@@ -1,8 +1,14 @@
 import { useState } from "react";
-import { AsideMenu } from "../asides/asideMenu/aside";
 import { RiMenu3Line } from "react-icons/ri";
 import { Link } from "react-router-dom";
+
 import "./header.scss";
+import {
+  defautNavigation,
+  defautNavigationUser,
+} from "../../constants/navigation";
+import { useAuthStore } from "../../stores/auth";
+import { AsideMenu } from "../asides/asideMenu/aside";
 
 interface HeaderProps {
   navigation?: { title: string; url: string; isFeature?: boolean }[];
@@ -10,15 +16,13 @@ interface HeaderProps {
 
 export type NavigationType = HeaderProps["navigation"];
 
-const defautNavigation: HeaderProps["navigation"] = [
-  { title: "Sobre", url: "#about", isFeature: false },
-  { title: "Recursos", url: "#features", isFeature: false },
-  { title: "Login", url: "/login", isFeature: false },
-  { title: "Localizar", url: "/map", isFeature: true },
-];
-
 export const Header = ({ navigation = defautNavigation }: HeaderProps) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const { user, loading } = useAuthStore();
+
+  if (user && !loading && navigation === defautNavigation) {
+    navigation = defautNavigationUser;
+  }
 
   const toggleAside = () => setIsOpen((prev) => !prev);
 
@@ -38,7 +42,7 @@ export const Header = ({ navigation = defautNavigation }: HeaderProps) => {
           className="d-flex align-items-center list-unstyled mb-0 font-primary fw-medium"
           style={{ fontSize: "0.875rem", gap: "1rem" }}
         >
-          {navigation.map((item, index) => {
+          {navigation?.map((item, index) => {
             if (item.isFeature) {
               return (
                 <li key={index}>
@@ -52,10 +56,7 @@ export const Header = ({ navigation = defautNavigation }: HeaderProps) => {
               );
             }
             return (
-              <li
-                key={index}
-                style={{ cursor: "pointer" }}
-              >
+              <li key={index} style={{ cursor: "pointer" }}>
                 {item.url.startsWith("http") ? (
                   <a
                     href={item.url}
@@ -93,11 +94,13 @@ export const Header = ({ navigation = defautNavigation }: HeaderProps) => {
         <RiMenu3Line size={24} />
       </span>
 
-      <AsideMenu
-        isOpen={isOpen}
-        navigation={navigation}
-        setIsOpen={toggleAside}
-      />
+      {navigation?.length ? (
+        <AsideMenu
+          isOpen={isOpen}
+          navigation={navigation}
+          setIsOpen={toggleAside}
+        />
+      ) : null}
     </header>
   );
 };

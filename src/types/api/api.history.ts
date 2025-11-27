@@ -2,5 +2,5 @@ export interface IrrigationHistoryModel {
   temperature: number;
   humidity: number;
   volume: number;
-  timestamp: Date;
+  timestamp: string;
 }

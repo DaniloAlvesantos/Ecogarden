@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
+
 import "./features.scss";
-import Tracking from "../../assets/tracking.png";
 import Mockup from "../../assets/mockup.png";
+import Tracking from "../../assets/tracking.png";
 
 export const FeaturesView = () => {
   return (

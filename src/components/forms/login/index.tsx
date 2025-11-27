@@ -1,6 +1,7 @@
-import { HiEyeOff, HiEye } from "react-icons/hi";
 import { useForm } from "react-hook-form";
+import { HiEyeOff, HiEye } from "react-icons/hi";
 import { Link } from "react-router-dom";
+
 import { PrimaryButton } from "../../buttons/primary";
 import { PrimaryInput } from "../../formFields/primaryInput";
 

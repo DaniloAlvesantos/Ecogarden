@@ -1,21 +1,41 @@
+import Cookies from "universal-cookie";
 import { create } from "zustand";
-import type { User } from "../types/user";
-import type { GeneralError } from "../types/error";
 
-interface AuthStoreProps {
+import { setEcoGardenClient } from "../lib/ecoGarden";
+import type { User } from "../types/user";
+
+interface AuthStore {
   user: User | null;
-  setUser: (newState: User) => void;
   loading: boolean;
-  setLoading: (newState: boolean) => void;
-  error: GeneralError<"login" | "register"> | null;
-  setError: (newState: GeneralError<"login" | "register">) => void;
+
+  setUser: (user: User | null) => void;
+  initializeAuth: VoidFunction;
+  logout: VoidFunction;
 }
 
-export const useAuthStore = create<AuthStoreProps>((set) => ({
+const cookies = new Cookies();
+
+export const useAuthStore = create<AuthStore>((set) => ({
   user: null,
-  setUser: (newState) => set({ user: newState }),
   loading: true,
-  setLoading: (newState) => set({ loading: newState }),
-  error: null,
-  setError: (newState) => set({ error: newState }),
+
+  setUser: (user) => set({ user }),
+
+  initializeAuth: () => {
+    const raw = cookies.get("ecogarden-user");
+    const token = cookies.get("ecogarden-token");
+
+    if (token) setEcoGardenClient(token);
+
+    if (!raw) {
+      set({ user: null, loading: false });
+      return;
+    }
+
+    set({ user: raw, loading: false });
+  },
+  logout: () => {
+    cookies.remove("ecogarden-user");
+    set({ user: null });
+  },
 }));

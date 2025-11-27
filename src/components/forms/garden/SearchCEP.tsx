@@ -1,6 +1,7 @@
 import { memo } from "react";
-import { useGetCEP } from "../../../hooks/useGetCEP";
 import { useForm, Controller } from "react-hook-form";
+
+import { useGetCEP } from "../../../hooks/useGetCEP";
 
 interface SearchCEPProps {
   setCEP: (cep: string) => void;

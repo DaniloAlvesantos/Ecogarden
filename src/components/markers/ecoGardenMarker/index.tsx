@@ -1,8 +1,9 @@
-import { Marker, Popup } from "react-leaflet";
 import L from "leaflet";
+import { Marker, Popup } from "react-leaflet";
+
 import "./style.scss";
-import { useMapStore } from "../../../stores/mapStore";
 import { useGetGarden } from "../../../hooks/useGetGarden";
+import { useMapStore } from "../../../stores/mapStore";
 
 const createCircularImageIcon = (imageUrl: string, size: number = 40) => {
   return L.divIcon({

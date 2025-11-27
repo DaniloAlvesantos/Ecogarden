@@ -1,0 +1,5 @@
+@use "../../../../scss/mixins" as mixins;
+
+form {
+  @include mixins.format-form-control();
+}

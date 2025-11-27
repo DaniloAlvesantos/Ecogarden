@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import Cookies from "universal-cookie";
 
 export const useCurrentPosition = () => {
   const [position, setPosition] = useState<{ lat: number; lng: number } | null>(
@@ -6,8 +7,17 @@ export const useCurrentPosition = () => {
   );
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const cookies = useMemo(() => new Cookies(), []);
 
   useEffect(() => {
+    const positionFromCookies = cookies.get("ecogarden-user-position");
+
+    if (positionFromCookies) {
+      setLoading(false);
+      setPosition(positionFromCookies);
+      return;
+    }
+
     if (!navigator.geolocation) {
       setError("Geolocation is not supported by this browser.");
       setLoading(false);
@@ -21,6 +31,10 @@ export const useCurrentPosition = () => {
           lng: pos.coords.longitude,
         });
         setLoading(false);
+        cookies.set("ecogarden-user-position", {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        });
       },
       (err) => {
         setError(err.message);
@@ -32,7 +46,7 @@ export const useCurrentPosition = () => {
         maximumAge: 60000,
       }
     );
-  }, []);
+  }, [cookies]);
 
   return { position, error, loading };
 };

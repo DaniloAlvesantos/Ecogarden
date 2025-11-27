@@ -1,7 +1,9 @@
-import { Header } from "../../components/header";
+import { Link } from "react-router-dom";
+
 import ConfuseGnome from "../../assets/mascots/gnome-confuse.png";
 import { PrimaryButton } from "../../components/buttons/primary";
-import { Link } from "react-router-dom";
+import { Header } from "../../components/header";
+
 import "./error.scss";
 
 interface ErrorViewProps {

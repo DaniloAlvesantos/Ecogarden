@@ -1,5 +1,6 @@
-import Earth from "../../assets/earth.png";
 import { PiPlant } from "react-icons/pi";
+
+import Earth from "../../assets/earth.png";
 import "./hero.scss";
 
 export const HeroView = () => {

@@ -2,7 +2,7 @@ import type { DefaultResponse } from "./api.default";
 import type { IrrigationHistoryModel } from "./api.history";
 import type { PlantModel } from "./api.plant";
 
-interface GardenModel {
+export interface GardenModel {
   number: number;
   name: string;
   cep: string;
@@ -12,7 +12,7 @@ interface GardenModel {
   lat: number;
   lng: number;
   imgUrl: string;
-  createdAt: Date;
+  createdAt: string;
   owner: {
     name: string;
     email: string;
@@ -31,6 +31,9 @@ export interface GardenResponse {
     street: string;
   };
   irrigationHistory: IrrigationHistoryModel[];
+  weather: {
+    degrees: number;
+  };
 }
 
 export type Garden = DefaultResponse<GardenResponse>;

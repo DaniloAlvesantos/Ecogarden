@@ -1,13 +1,10 @@
-import type { AsideDataProps } from "../components/asides/asideDashboard";
-import { FaUser, FaLeaf } from "react-icons/fa";
+import { FaLeaf } from "react-icons/fa";
 import { TbMapPin } from "react-icons/tb";
 
+import type { AsideDataProps } from "../components/asides/asideDashboard";
+import { DashboardView, ProfileView } from "../views";
+
 export const AsideData: AsideDataProps[] = [
-  {
-    icon: FaUser,
-    label: "Perfil",
-    link: "/dashboard/my/profile",
-  },
   {
     icon: FaLeaf,
     label: "Hortas",
@@ -19,3 +16,21 @@ export const AsideData: AsideDataProps[] = [
     link: "/map",
   },
 ];
+
+export const DashboardViews = [
+  {
+    href: "dashboard",
+    Component: DashboardView,
+  },
+  {
+    href: "profile",
+    Component: ProfileView,
+  },
+] as const;
+
+export type DashboardViewHref = (typeof DashboardViews)[number]["href"];
+
+export type DashboardViewsProps = {
+  href: DashboardViewHref;
+  Component: React.FC<{ changeView: (href: DashboardViewHref) => void }>;
+};

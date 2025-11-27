@@ -1,20 +1,59 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Cookies from "universal-cookie";
+
+import Gnome from "../assets/mascots/gnome-plate.png";
 import { SignUpForm, type SignUpFormData } from "../components/forms/signup";
 import { mascots } from "../constants/login";
-import Gnome from "../assets/mascots/gnome-plate.png";
 import "../views/login/login.scss";
+import { setEcoGardenClient } from "../lib/ecoGarden";
+import { useAuthStore } from "../stores/auth";
+import { handleSignUp } from "../utils/auth";
 
 export function SignUpPage() {
   const [chosenMascot] = useState(
     mascots[Math.floor(Math.random() * mascots.length)]
   );
+  const { setUser, user, loading } = useAuthStore();
+  const cookies = new Cookies();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user && !loading) {
+      navigate("/dashboard");
+    }
+  }, [user, loading, navigate]);
 
   const handleForm = async (data: SignUpFormData) => {
     const hasEmptyValue = Object.entries(data).some(([, value]) => !value);
-    if (!hasEmptyValue) {
+    console.log(data);
+    if (hasEmptyValue) {
       alert("Formulário possui valor vazio!");
       return;
     }
+
+    const signupData = await handleSignUp(data);
+
+    if (signupData.error) {
+      alert(signupData.error.message);
+      return;
+    }
+
+    const { token, currentUser, expires } = signupData;
+
+    cookies.set("ecogarden-token", token, {
+      expires,
+    });
+
+    cookies.set("ecogarden-user", JSON.stringify(currentUser), {
+      expires,
+    });
+
+    setEcoGardenClient(token);
+
+    setUser(currentUser);
+
+    navigate("/dashboard");
   };
 
   return (
@@ -24,10 +63,7 @@ export function SignUpPage() {
           id="logo"
           className="d-flex mx-auto align-items-center font-primary fw-bold"
         >
-          <img
-            src={Gnome}
-            alt="Gnome with plate"
-          />
+          <img src={Gnome} alt="Gnome with plate" />
           <p>Eco Garden</p>
         </div>
         <SignUpForm handleForm={handleForm} />

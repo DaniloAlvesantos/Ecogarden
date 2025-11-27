@@ -1,8 +1,8 @@
-import gnome from "../assets/mascots/gnome-2.png";
 import beet from "../assets/mascots/beet.png";
 import broccoli from "../assets/mascots/broccoli.png";
-import tomato from "../assets/mascots/tomato.png";
 import carrot from "../assets/mascots/carriot.png";
+import gnome from "../assets/mascots/gnome-2.png";
+import tomato from "../assets/mascots/tomato.png";
 
 export const mascots = [
   { name: "Gnome", path: gnome, color: "#277CB3" },

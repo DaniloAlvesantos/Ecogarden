@@ -1,64 +1,47 @@
+import { useCallback, useState } from "react";
+
 import { AsideDashboard } from "../components/asides/asideDashboard";
 import { Header } from "../components/header";
+import {
+  DashboardViews,
+  type DashboardViewHref,
+  type DashboardViewsProps,
+} from "../constants/dashboard";
 
 export function DashboardPage() {
+  const [view, setView] = useState<DashboardViewsProps>(DashboardViews[0]);
+
+  const handleView = useCallback((targetView: DashboardViewHref) => {
+    const target = DashboardViews.find((view) => view.href === targetView);
+
+    if (!target) return;
+
+    setView(target);
+  }, []);
+
+  const isViewDashboard = view?.href === "dashboard";
+  const CurrentView = view?.Component ?? DashboardViews[0].Component;
+
   return (
     <>
-      <Header navigation={[]} />
+      <Header
+        navigation={[
+          { title: "Home", url: "/", isFeature: true },
+        ]}
+      />
       <hr />
-      <section className="row container-fluid">
-        <AsideDashboard />
-        <main className="col-10">
-          <section>
-            <div>
-              <h1>Dashboard</h1>
-              <p className="text-eco-mutated">Seja bem vindo ao Dashboard</p>
-            </div>
-
-            <div className="row gap-4 container-fluid">
-              <div className="card col-3">
-                <div className="card-body">
-                  <h5 className="card-title text-eco-green-500">
-                    <strong>5</strong> - Hortas Cadastradas
-                  </h5>
-                  <a
-                    href="#"
-                    className="card-link text-decoration-underline text-primary"
-                  >
-                    Minhas hortas
-                  </a>
-                </div>
-              </div>
-
-              <div className="card col-3">
-                <div className="card-body">
-                  <h5 className="card-title text-eco-green-500">
-                    Volume d'gua: 500ML
-                  </h5>
-                  <a
-                    href="#"
-                    className="card-link text-decoration-underline text-primary"
-                  >
-                    Monitorar horta
-                  </a>
-                </div>
-              </div>
-
-              <div className="card col-3">
-                <div className="card-body">
-                  <h5 className="card-title text-eco-green-500">
-                    <strong>5</strong> - Hortas Cadastradas
-                  </h5>
-                  <a
-                    href="#"
-                    className="card-link text-decoration-underline text-primary"
-                  >
-                    Minhas hortas
-                  </a>
-                </div>
-              </div>
-            </div>
-          </section>
+      <section className="row container-fluid" style={{ height: "80vh" }}>
+        <AsideDashboard changeView={handleView} />
+        <main className="col-lg-10 col-md-9 col-12">
+          {!isViewDashboard ? (
+            <span
+              className="btn btn-link p-0"
+              onClick={() => handleView("dashboard")}
+            >
+              Voltar
+            </span>
+          ) : null}
+          <CurrentView changeView={handleView} />
         </main>
       </section>
     </>

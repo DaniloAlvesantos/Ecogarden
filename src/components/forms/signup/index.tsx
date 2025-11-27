@@ -1,10 +1,11 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { HiEyeOff, HiEye } from "react-icons/hi";
 import { Link } from "react-router-dom";
+import { useHookFormMask } from "use-mask-input";
+
 import { PrimaryButton } from "../../buttons/primary";
 import { PrimaryInput } from "../../formFields/primaryInput";
-import { useHookFormMask } from "use-mask-input";
-import { useState } from "react";
-import { HiEyeOff, HiEye } from "react-icons/hi";
 
 export type SignUpFormData = {
   name: string;

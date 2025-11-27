@@ -1,16 +1,20 @@
 import { useEffect, useState } from "react";
-import { LuCloudUpload } from "react-icons/lu";
-import { PrimaryButton } from "../../buttons/primary";
-import "./style.scss";
-import { SecondaryInput } from "../../formFields/secondaryInput";
 import { useForm } from "react-hook-form";
-import { PrimaryModal } from "../../modals/primaryModal";
-import { SearchCEP } from "./SearchCEP";
+import { LuCloudUpload } from "react-icons/lu";
+import { Link } from "react-router-dom";
+
 import { useGetAdress } from "../../../hooks/useGetCEP";
+import { EcoGardenApi } from "../../../lib/ecoGarden";
+import { PrimaryButton } from "../../buttons/primary";
+import { SecondaryInput } from "../../formFields/secondaryInput";
+import { PrimaryModal } from "../../modals/primaryModal";
+
+import { SearchCEP } from "./SearchCEP";
+import "./style.scss";
 
 interface GardenFormProps {
   name: string;
-  cep: number;
+  cep: string;
   logradouro: string;
   numero: number;
   tamanho: number;
@@ -23,21 +27,85 @@ export const GardenForm = () => {
     register,
     formState: { errors },
     setValue,
+    watch,
   } = useForm<GardenFormProps>({
     mode: "onBlur",
   });
 
   const [cep, setCEPState] = useState<string>("");
-
   const adressData = useGetAdress(cep);
 
-  const onSubmit = (data: GardenFormProps) => {
-    console.table(data);
+  const pictureFile = watch("picture");
+  const [preview, setPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!pictureFile || pictureFile.length === 0) {
+      setPreview(null);
+      return;
+    }
+
+    const file = pictureFile[0];
+    const previewUrl = URL.createObjectURL(file);
+    setPreview(previewUrl);
+
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [pictureFile]);
+
+  const onSubmit = async (data: GardenFormProps) => {
+    const isInvalid = Object.entries(data).some(
+      (d) => !d[1] || d[1] === "" || d[1] === 0 || d[1] === null
+    );
+
+    if (isInvalid) {
+      console.log("Validation failed:", data);
+      return;
+    }
+
+    const { name, cep, logradouro, numero, tamanho, picture } = data;
+
+    if (!picture || picture.length === 0) {
+      console.error("No image selected");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("cep", cep);
+    formData.append("place", logradouro);
+    formData.append("number", String(numero));
+    formData.append("tamanhoM2", String(tamanho));
+    
+    formData.append("img", picture[0], picture[0].name);
+
+    for (const [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        console.log(key, ":", value.name, value.size, "bytes", value.type);
+      } else {
+        console.log(key, ":", value);
+      }
+    }
+
+    try {
+      const res = await EcoGardenApi.post(
+        "/garden/create", 
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      console.log("Success:", res.data);
+    } catch (err) {
+      if (err instanceof Error) {
+        console.error("Error message:", err.message);
+      }
+    }
   };
 
   const setCEP = (rawCEP: string) => {
     const cleaned = rawCEP.replace("-", "");
-    setValue("cep", Number(cleaned));
+    setValue("cep", cleaned);
     setCEPState(cleaned);
   };
 
@@ -64,9 +132,12 @@ export const GardenForm = () => {
         </p>
       </div>
 
-      <form id="garden-form" onSubmit={handleSubmit(onSubmit)}>
+      <form
+        id="garden-form"
+        onSubmit={handleSubmit(onSubmit)}
+        encType="multipart/form-data"
+      >
         <div className="row">
-          {/* Nome da Horta */}
           <div className="col-12 col-md-6">
             <label className="form-label">Nome da horta</label>
             <SecondaryInput<GardenFormProps>
@@ -80,7 +151,6 @@ export const GardenForm = () => {
             />
           </div>
 
-          {/* CEP */}
           <div className="col-12 col-md-6">
             <label className="form-label">CEP</label>
             <SecondaryInput<GardenFormProps>
@@ -113,7 +183,6 @@ export const GardenForm = () => {
         </div>
 
         <div className="row">
-          {/* Logradouro */}
           <div className="col-12 col-md-4">
             <label className="form-label">Logradouro</label>
             <SecondaryInput<GardenFormProps>
@@ -128,7 +197,6 @@ export const GardenForm = () => {
             />
           </div>
 
-          {/* Número */}
           <div className="col-12 col-md-4">
             <label className="form-label">Número</label>
             <SecondaryInput<GardenFormProps>
@@ -143,7 +211,6 @@ export const GardenForm = () => {
             />
           </div>
 
-          {/* Tamanho */}
           <div className="col-12 col-md-4">
             <label className="form-label">
               Tamanho m<sup>2</sup>
@@ -161,7 +228,6 @@ export const GardenForm = () => {
           </div>
         </div>
 
-        {/* Foto */}
         <div className="col-12 mt-4">
           <div>
             <h3 className="fs-3">Foto</h3>
@@ -171,17 +237,18 @@ export const GardenForm = () => {
               <input
                 type="file"
                 id="file-inp"
+                accept="image/jpeg, image/png, image/gif, image/jpg "
                 {...register("picture", {
                   required: "A foto da horta é obrigatória",
                   validate: {
                     validType: (files) => {
                       const file = files?.[0];
                       if (!file) return true;
-
                       const validTypes = [
                         "image/jpeg",
                         "image/png",
                         "image/gif",
+                        "image/jpg",
                       ];
                       return (
                         validTypes.includes(file.type) ||
@@ -191,7 +258,6 @@ export const GardenForm = () => {
                     maxSize: (files) => {
                       const file = files?.[0];
                       if (!file) return true;
-
                       const maxSize = 5 * 1024 * 1024;
                       return (
                         file.size <= maxSize ||
@@ -213,20 +279,35 @@ export const GardenForm = () => {
           {errors.picture && (
             <div className="invalid-feedback">{errors.picture.message}</div>
           )}
+
+          {preview && preview.length && (
+            <div className="mt-3">
+              <img
+                src={preview}
+                alt="Preview da imagem"
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: "250px",
+                  borderRadius: "10px",
+                  objectFit: "cover",
+                }}
+              />
+            </div>
+          )}
         </div>
 
-        {/* Buttons */}
         <div
           className="mt-4 container-fluid d-flex flex-column flex-md-row gap-4 justify-content-end"
           id="button-container"
         >
-          <button
-            className="btn btn-secondary rounded-pill py-2"
+          <Link
+            to="/dashboard/my/gardens"
+            className="btn btn-secondary rounded-pill py-2 px-4"
             id="cancel-button"
             type="button"
           >
             Cancelar
-          </button>
+          </Link>
 
           <PrimaryButton text="Enviar" type="submit" id="submit-button" />
         </div>

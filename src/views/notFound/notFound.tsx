@@ -1,7 +1,9 @@
 import { BsArrowLeft } from "react-icons/bs";
-import LostGnome from "../../assets/mascots/gnome-lost.png";
-import "./notFound.scss";
 import { Link } from "react-router-dom";
+
+import LostGnome from "../../assets/mascots/gnome-lost.png";
+
+import "./notFound.scss";
 
 export const NotFoundPage = () => {
   return (

@@ -1,6 +1,6 @@
+import L from "leaflet";
 import { Marker, Popup } from "react-leaflet";
 import Gnome from "/gnome-1.png";
-import L from "leaflet";
 
 const createCircularImageIcon = (imageUrl: string, size: number = 40) => {
   return L.divIcon({
