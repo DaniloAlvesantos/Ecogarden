@@ -1,0 +1,15 @@
+@use "../../../scss/mixins" as mixins;
+
+.dashboard-chart-container {
+  width: 100%;
+  height: auto;
+
+  // Optional: give some padding or border
+  padding: 1rem;
+  background: $light; // Bootstrap variable
+  border-radius: 0.5rem;
+
+  @include mixins.responsive(md) {
+    padding: 0.5rem;
+  }
+}

@@ -24,13 +24,9 @@ export function DashboardPage() {
 
   return (
     <>
-      <Header
-        navigation={[
-          { title: "Home", url: "/", isFeature: true },
-        ]}
-      />
+      <Header navigation={[{ title: "Home", url: "/", isFeature: true }]} />
       <hr />
-      <section className="row container-fluid" style={{ height: "80vh" }}>
+      <section className="row container-fluid" style={{ height: "100dvh" }}>
         <AsideDashboard changeView={handleView} />
         <main className="col-lg-10 col-md-9 col-12">
           {!isViewDashboard ? (
