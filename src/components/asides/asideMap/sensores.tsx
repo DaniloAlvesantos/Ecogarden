@@ -10,15 +10,15 @@ import { MapCard } from "../../cards/mapCard";
 
 const listenToSensorData = (
   gardenId: string,
-  callback: (data: any[]) => void
+  callback: (data: SensorData[]) => void
 ) => {
   const ref = collection(doc(db, "garden", gardenId), "sensor");
 
   return onSnapshot(
     ref,
     (snapshot) => {
-      const readings: any[] = [];
-      snapshot.forEach((doc) => readings.push(doc.data()));
+      const readings: SensorData[] = [];
+      snapshot.forEach((doc) => readings.push(doc.data() as SensorData));
       callback(readings);
     },
     (err) => console.error("Sensor listener error:", err)
