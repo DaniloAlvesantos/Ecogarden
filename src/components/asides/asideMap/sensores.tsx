@@ -61,6 +61,10 @@ export const Sensores = () => {
     return response;
   };
 
+  const gardenMinTemp = Math.min(...currentGarden.garden.plants.map((p) => p.plant.tempMin));
+
+  const gardenMaxTemp = Math.max(...currentGarden.garden.plants.map((p) => p.plant.tempMax));
+
   return (
     <>
       {humidity && (
@@ -77,7 +81,7 @@ export const Sensores = () => {
         <MapCard.Sensor
           header="Temperatura"
           title={`${temperature}°C`}
-          text="Faixa ideal: 2°C - 40°C"
+          text={`Faixa ideal: ${gardenMinTemp}°C - ${gardenMaxTemp}°C`}
           progress={temperature}
           progressStyle="warning"
         />

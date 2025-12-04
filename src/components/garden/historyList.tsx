@@ -13,13 +13,21 @@ export const HistoryList: React.FC<HistoryListProps> = ({ history }) => (
       <LuDroplets className="me-2 text-primary" size={20} />
       Irrigações recentes
     </h3>
-    <ul className="list-unstyled">
+
+    <ul
+      className="list-unstyled"
+      style={{
+        maxHeight: "350px",
+        overflowY: "auto",
+        overflowX: "hidden",
+      }}
+    >
       {history.map((h, index) => (
         <li
           key={index}
           className="d-flex justify-content-between align-items-center p-3 bg-light rounded mb-2"
         >
-          <span>{new Date(h.timestamp).toLocaleDateString()}</span>
+          <span>{new Date(h.timestamp).toLocaleString()}</span>
           <span className="text-primary fw-semibold">{h.volume} ML</span>
         </li>
       ))}

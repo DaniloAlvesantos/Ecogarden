@@ -18,7 +18,7 @@ export const Historico = () => {
 
   return (
     <ul className="list-group">
-      {history.map((item, index) => (
+      {history.slice(0, 6).map((item, index) => (
         <li
           key={index}
           className="list-group-item d-flex align-items-center gap-2"

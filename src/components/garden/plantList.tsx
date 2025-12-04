@@ -8,13 +8,23 @@ interface PlantListProps {
   setShowAddPlantsForm: (show: boolean) => void;
 }
 
-export const PlantList: React.FC<PlantListProps> = ({ plants, setShowAddPlantsForm }) => (
+export const PlantList: React.FC<PlantListProps> = ({
+  plants,
+  setShowAddPlantsForm,
+}) => (
   <div className="p-4 bg-white rounded shadow-lg border h-100">
     <h3 className="fs-4 fw-bold mb-3 d-flex align-items-center">
       <LuUtensils className="me-2 text-success" size={20} />
       Hortaliças atuais
     </h3>
-    <ul className="list-unstyled">
+    <ul
+      className="list-unstyled"
+      style={{
+        maxHeight: "350px",
+        overflowY: "auto",
+        overflowX: "hidden",
+      }}
+    >
       {plants.map((p, index) => (
         <li
           key={index}
@@ -25,6 +35,11 @@ export const PlantList: React.FC<PlantListProps> = ({ plants, setShowAddPlantsFo
         </li>
       ))}
     </ul>
-    <button className="btn btn-success w-100" onClick={() => setShowAddPlantsForm(true)}>Editar</button>
+    <button
+      className="btn btn-success w-100"
+      onClick={() => setShowAddPlantsForm(true)}
+    >
+      Editar
+    </button>
   </div>
 );

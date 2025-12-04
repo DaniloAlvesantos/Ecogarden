@@ -15,7 +15,9 @@ export const HortaInfo = () => {
         Criada em: {new Date(createdAt).toLocaleDateString("pt-BR")}
       </li>
       <li className="list-group-item">Responsável: {owner.name}</li>
-      <li className="list-group-item">Email: {owner.email}</li>
+      <li className="list-group-item text-truncate" title={owner.email}>
+        Email: {owner.email}
+      </li>
     </ul>
   );
 };

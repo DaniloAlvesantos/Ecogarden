@@ -1,4 +1,5 @@
 import { PiPlant } from "react-icons/pi";
+import { Link } from "react-router-dom";
 
 import Earth from "../../assets/earth.png";
 import "./hero.scss";
@@ -21,10 +22,12 @@ export const HeroView = () => {
           hortas comunitárias sempre saudável, economizando água e facilitando o
           cuidado coletivo
         </p>
-        <button className="btn bg-eco-green-500 text-eco-light rounded-pill px-4 py-2 d-flex align-items-center justify-content-center mx-auto mx-md-0 hover-eco-bg transition-colors fs-6">
-          <PiPlant className="text-eco-green-300" size={28} />
-          Faça sua parte
-        </button>
+        <Link to="login">
+          <button className="btn bg-eco-green-500 text-eco-light rounded-pill px-4 py-2 d-flex align-items-center justify-content-center mx-auto mx-md-0 hover-eco-bg transition-colors fs-6">
+            <PiPlant className="text-eco-green-300" size={28} />
+            Faça sua parte
+          </button>
+        </Link>
       </div>
 
       <img src={Earth} alt="earth illustration" className="img-fluid earth" />

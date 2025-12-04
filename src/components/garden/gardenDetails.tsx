@@ -4,6 +4,7 @@ import { LuPencil, LuMapPin, LuSquare } from "react-icons/lu";
 import { useAddPlantsToGarden } from "../../hooks/useAddPlants";
 import { EcoGardenApi } from "../../lib/ecoGarden";
 import type { GardenResponse } from "../../types/api/api.garden";
+import { DashboardChart } from "../chart/dashoboard";
 import {
   EditGardenForm,
   type EditGardenFormFields,
@@ -141,9 +142,16 @@ export const GardenDetails: React.FC<GardenDetailsProps> = ({
             }}
           />
 
+          <div
+            className="position-absolute top-0 start-0 w-100 h-100"
+            style={{
+              background: "rgba(0, 0, 0, 0.25)",
+            }}
+          ></div>
+
           <div className="position-absolute bottom-0 start-0 p-4">
             <h1 className="display-4 fw-bold text-white">{gardenState.name}</h1>
-            <p className="fs-5 text-white-50 mt-2">{fullAddress}</p>
+            <p className="fs-5 text-white mt-2">{fullAddress}</p>
           </div>
 
           <button
@@ -194,6 +202,14 @@ export const GardenDetails: React.FC<GardenDetailsProps> = ({
                 value={gardenState.owner.name}
               />
             </div>
+          </div>
+
+          <div className="p-4 bg-white rounded shadow-lg border my-4">
+            {initialGardenData.irrigationHistory.length > 1 ? (
+              <DashboardChart gardenId={gardenState.id} />
+            ) : (
+              <p>Não há histórico de irrigação.</p>
+            )}
           </div>
 
           {/* Plants and irrigation history */}

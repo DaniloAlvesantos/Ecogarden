@@ -1,17 +1,34 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
+import GnomeLost from "../../assets/mascots/gnome-lost.png";
 import { DashboardChart } from "../../components/chart/dashoboard";
-import type { Irrigations } from "../../types/collection/irrigations";
-import { irrigationHistory } from "../../utils/irrigationHistory";
+import { useDashboard } from "../../hooks/useDashboard";
+
+import { DashboardSkeleton } from "./loading";
+
+import "./loading.scss";
 
 export const DashboardView = () => {
-  const [history, setHistory] = useState<Irrigations[]>([]);
+  const [selectedGarden, setSelectedGarden] = useState("");
+  const { data, isLoading } = useDashboard();
 
   useEffect(() => {
-    irrigationHistory("cmgjpfk350001n9vhbx9v8m9b")
-      .then(setHistory)
-      .catch(console.error);
-  }, []);
+    if (data) {
+      setSelectedGarden(data.recentGarden?.[0]?.id ?? "");
+    }
+  }, [data]);
+
+  if (isLoading) return <DashboardSkeleton />;
+
+  if (!data)
+    return <div className="text-danger">Erro ao carregar dashboard.</div>;
+
+  const handleGardenChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedGarden(e.target.value);
+  };
+
+  const hasContent = data.recentGarden.length > 0;
 
   return (
     <section>
@@ -20,53 +37,50 @@ export const DashboardView = () => {
         <p className="text-eco-mutated">Seja bem vindo ao Dashboard</p>
       </div>
 
-      <div className="container-fluid">
-        <DashboardChart rawData={history} />
-      </div>
+      {hasContent ? (
+        <div className="container-fluid">
+          <select
+            className="form-select mb-4"
+            aria-label="Trocar horta"
+            onChange={handleGardenChange}
+          >
+            {data.recentGarden.map((garden, i) => {
+              if (i === 0)
+                return (
+                  <option key={garden.id} value={garden.id} selected>
+                    {garden.name}
+                  </option>
+                );
 
-      <div className="row gap-4 container-fluid my-5">
-        <div className="card col-12 col-lg-3">
-          <div className="card-body">
-            <h5 className="card-title text-eco-green-500">
-              <strong>5</strong> - Hortas Cadastradas
-            </h5>
-            <a
-              href="#"
-              className="card-link text-decoration-underline text-primary"
-            >
-              Minhas hortas
-            </a>
+              return (
+                <option key={garden.id} value={garden.id}>
+                  {garden.name}
+                </option>
+              );
+            })}
+          </select>
+          <DashboardChart gardenId={selectedGarden} />
+        </div>
+      ) : (
+        <div className="container-fluid">
+          <div
+            className="d-flex flex-column align-items-center card p-2"
+            style={{ maxWidth: "20rem" }}
+          >
+            <span className="fs-6 fw-medium">
+              Você ainda não cadastrou nenhuma horta
+            </span>
+            <img
+              src={GnomeLost}
+              alt="gnome lost"
+              style={{ maxHeight: "10rem" }}
+            />
+            <Link to="/dashboard/garden/create" className="btn btn-link p-0">
+              Cadastrar agora
+            </Link>
           </div>
         </div>
-
-        <div className="card col-12 col-lg-3">
-          <div className="card-body">
-            <h5 className="card-title text-eco-green-500">
-              Volume d'gua: 500ML
-            </h5>
-            <a
-              href="#"
-              className="card-link text-decoration-underline text-primary"
-            >
-              Monitorar horta
-            </a>
-          </div>
-        </div>
-
-        <div className="card col-12 col-lg-3">
-          <div className="card-body">
-            <h5 className="card-title text-eco-green-500">
-              <strong>5</strong> - Hortas Cadastradas
-            </h5>
-            <a
-              href="#"
-              className="card-link text-decoration-underline text-primary"
-            >
-              Minhas hortas
-            </a>
-          </div>
-        </div>
-      </div>
+      )}
     </section>
   );
 };

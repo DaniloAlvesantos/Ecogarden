@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   LineChart,
   Line,
@@ -9,16 +10,27 @@ import {
 } from "recharts";
 
 import type { Irrigations } from "../../../types/collection/irrigations";
+import { irrigationHistory } from "../../../utils/irrigationHistory";
 
 interface DashboardChartProps {
-  rawData: Irrigations[];
+  gardenId: string;
 }
 
-export function DashboardChart({ rawData }: DashboardChartProps) {
-  const data = rawData.map((d) => ({
-    ...d,
-    time: new Date(d.timestamp.seconds * 1000),
-  }));
+export function DashboardChart({ gardenId }: DashboardChartProps) {
+  const [history, setHistory] = useState<Irrigations[]>([]);
+
+  useEffect(() => {
+    irrigationHistory(gardenId).then(setHistory).catch(console.error);
+  }, [gardenId]);
+
+  const data = history
+    .map((d) => ({
+      temperatura: d.temperature,
+      umidade: d.humidity,
+      volume: d.volume,
+      time: new Date(d.timestamp.seconds * 1000),
+    }))
+    .sort((a, b) => a.time.getTime() - b.time.getTime());
 
   return (
     <div className="dashboard-chart-container">
@@ -54,11 +66,24 @@ export function DashboardChart({ rawData }: DashboardChartProps) {
                 })
                 .toUpperCase()
             }
+            formatter={(value, name) => {
+              switch (name) {
+                case "temperatura":
+                  return [`${value}°C`, "Temperatura"];
+                case "umidade":
+                  return [`${value}%`, "Umidade"];
+                case "volume":
+                  return [`${value} mL`, "Volume"];
+                default:
+                  return [value, name];
+              }
+            }}
+            labelStyle={{ fontFamily: "Inter" }}
           />
 
-          <Line type="monotone" dataKey="temperature" stroke="#ff0000" />
-          <Line type="monotone" dataKey="humidity" stroke="#0000ff" />
-          <Line type="monotone" dataKey="volume" stroke="#00aa00" />
+          <Line type="monotone" dataKey="temperatura" stroke="#FFC107" />
+          <Line type="monotone" dataKey="umidade" stroke="#0D6EFD" />
+          <Line type="monotone" dataKey="volume" stroke="#188754" />
         </LineChart>
       </ResponsiveContainer>
     </div>
