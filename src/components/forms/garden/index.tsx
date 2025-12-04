@@ -171,7 +171,7 @@ export const GardenForm = () => {
               data-bs-target="#cepModal"
               type="button"
             >
-              Buscar CEP
+              Não sei meu CEP
             </button>
 
             <PrimaryModal
@@ -190,7 +190,7 @@ export const GardenForm = () => {
               name="logradouro"
               errors={errors}
               required="Logradouro é obrigatório"
-              placeholder="Rua das Flores"
+              placeholder="Seu endereço"
               register={register}
               id="garden-logradouro"
               disabled={true}
@@ -204,7 +204,7 @@ export const GardenForm = () => {
               name="numero"
               errors={errors}
               required="Número é obrigatório"
-              placeholder="123"
+              placeholder="Número do endereço"
               inputMode="numeric"
               register={register}
               id="garden-numero"
@@ -220,7 +220,7 @@ export const GardenForm = () => {
               name="tamanho"
               errors={errors}
               required="Tamanho é obrigatório"
-              placeholder="100"
+              placeholder="tamanho em metros quadrados"
               inputMode="numeric"
               register={register}
               id="garden-tamanho"

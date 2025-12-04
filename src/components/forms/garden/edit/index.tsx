@@ -133,7 +133,7 @@ const EditGardenForm: React.FC<RefactoredGardenFormProps> = ({
               data-bs-target="#cepModal"
               type="button"
             >
-              Buscar CEP
+              Não sei meu CEP
             </button>
 
             <PrimaryModal
