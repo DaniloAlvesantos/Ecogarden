@@ -1,7 +1,7 @@
 # Eco Garden
 
 <center>
-<img src="https://ecogarden-pi.netlify.app/gnome-1.png" alt="Exemplo imagem">
+<img src="/public/gnome-1.png" alt="Exemplo imagem">
 </center>
 
 > Localize a horta comunitaria mais próximo de você e veja seus _status_ atual. Cidades inteligentes estão modernizando absolutamente tudo, e a sua **saúde** não pode ficar de fora!
@@ -62,16 +62,16 @@ Agradecemos às seguintes pessoas que contribuíram para este projeto:
       </a>
     </td>
     <td align="center">
-      <a href="https://github.com/leandro10santos" title="defina o título do link">
-        <img src="https://avatars.githubusercontent.com/u/179064820?v=4" width="100px;" alt="Foto do Steve Jobs"/><br>
+      <a href="#" title="defina o título do link">
+        <img src="https://miro.medium.com/max/360/0*1SkS3mSorArvY9kS.jpg" width="100px;" alt="Foto do Steve Jobs"/><br>
         <sub>
           <b>Leandro Santos</b>
         </sub>
       </a>
     </td>
      <td align="center">
-      <a href="https://github.com/IzacMGomes" title="defina o título do link">
-        <img src="https://avatars.githubusercontent.com/u/179064795?v=4" width="100px;" alt="Foto do Steve Jobs"/><br>
+      <a href="#" title="defina o título do link">
+        <img src="https://miro.medium.com/max/360/0*1SkS3mSorArvY9kS.jpg" width="100px;" alt="Foto do Steve Jobs"/><br>
         <sub>
           <b>Izac Gomes</b>
         </sub>
