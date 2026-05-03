@@ -24,8 +24,11 @@ export async function recordIrrigationEvent({
     temperature: temperature,
     volume: volume,
     timestamp: Timestamp.now(),
-    initial: true,
   };
+
+  if(humidity == 0 && temperature == 0 && volume == 0) {
+    irrigationData["initial"] = true;
+  }
 
   try {
     const newDocRef = await irrigationCollectionRef.add(irrigationData);

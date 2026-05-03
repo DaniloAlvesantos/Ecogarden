@@ -1,4 +1,4 @@
-import z from "zod";
+import z, { record } from "zod";
 import { URLSearchParams } from "url";
 import { MapData } from "../lib/mapData.js";
 import { prisma } from "../lib/prismaClient.js";
@@ -26,7 +26,7 @@ export async function GardenRoute(app: FastifyTypedInstance) {
       const gardens = await prisma.garden.count();
 
       return res.send({ gardens }).code(200);
-    }
+    },
   );
 
   app.post(
@@ -81,7 +81,7 @@ export async function GardenRoute(app: FastifyTypedInstance) {
 
       const placeParams = new URLSearchParams(place).toString();
       const response = await MapData.get<MapDataCoding>(
-        `/geocoding.php?query=${placeParams}&country=br`
+        `/geocoding.php?query=${placeParams}&country=br`,
       );
 
       const mapData = response.data.data;
@@ -128,20 +128,15 @@ export async function GardenRoute(app: FastifyTypedInstance) {
         volume: 0,
       });
 
-      const sensorHimidity = await recordSensorData({
-        gardenId: garden.id,
-        type: "HUMIDITY",
-        percentage: 0,
+      const state = await recordSensorData(garden.id, {
+        solo_humidity: 0,
+        pump: false,
+        flow_rate: 0,
+        message: "",
       });
 
-      const sensorWaterLevel = await recordSensorData({
-        gardenId: garden.id,
-        type: "WATER_LEVEL",
-        depth_cm: 0,
-      });
-
-      return res.send({ data: garden, collection }).code(201);
-    }
+      return res.send({ data: garden, collection, state }).code(201);
+    },
   );
 
   app.get(
@@ -228,7 +223,7 @@ export async function GardenRoute(app: FastifyTypedInstance) {
       };
 
       return res.send({ data }).code(200);
-    }
+    },
   );
 
   app.get(
@@ -270,7 +265,7 @@ export async function GardenRoute(app: FastifyTypedInstance) {
 
       const data = await Promise.all(dataPromises);
       return res.send({ data }).code(200);
-    }
+    },
   );
 
   app.get(
@@ -302,7 +297,7 @@ export async function GardenRoute(app: FastifyTypedInstance) {
       if (!gardens) return res.send({ error: "Gardens not found" }).code(404);
 
       return res.send({ gardens }).code(200);
-    }
+    },
   );
 
   app.put(
@@ -328,7 +323,7 @@ export async function GardenRoute(app: FastifyTypedInstance) {
 
       const placeParams = new URLSearchParams(place).toString();
       const response = await MapData.get<MapDataCoding>(
-        `/geocoding.php?query=${placeParams}&country=br`
+        `/geocoding.php?query=${placeParams}&country=br`,
       );
 
       const mapData = response.data.data;
@@ -356,7 +351,7 @@ export async function GardenRoute(app: FastifyTypedInstance) {
       });
 
       return res.send({ garden }).code(200);
-    }
+    },
   );
 
   app.post(
@@ -373,7 +368,7 @@ export async function GardenRoute(app: FastifyTypedInstance) {
               z.object({
                 plantId: z.number(),
                 quant: z.number().min(1),
-              })
+              }),
             )
             .min(1),
         }),
@@ -461,7 +456,7 @@ export async function GardenRoute(app: FastifyTypedInstance) {
         message: "Process completed",
         results,
       });
-    }
+    },
   );
 
   app.get(
@@ -483,7 +478,7 @@ export async function GardenRoute(app: FastifyTypedInstance) {
       });
 
       const sortedGarndes = gardens.sort(
-        (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
+        (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
       );
 
       const gardensCount = gardens.length;
@@ -497,6 +492,6 @@ export async function GardenRoute(app: FastifyTypedInstance) {
           })),
         })
         .code(200);
-    }
+    },
   );
 }

@@ -13,22 +13,24 @@ function mqttPlugin(fastify: FastifyInstance) {
 
     if (!deviceId) return;
 
-    const garden = await prisma.garden.findUnique({
-      where: {
-        deviceId,
-      },
-      select: {
-        id: true,
-        name: true,
-      },
-    });
+    console.log({topic, message: JSON.parse(message.toString()) })
 
-    if (!garden) return;
+    // const garden = await prisma.garden.findUnique({
+    //   where: {
+    //     deviceId,
+    //   },
+    //   select: {
+    //     id: true,
+    //     name: true,
+    //   },
+    // });
 
-    await recordSensorData(garden.id, state);
+    // if (!garden) return;
+
+    // await recordSensorData(garden.id, state);
   });
 
   fastify.decorate("mqtt", mqttClient);
 }
 
-export default fp(mqttPlugin);
+export default mqttPlugin;
