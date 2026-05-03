@@ -7,7 +7,7 @@
     "build": "npx prisma generate && tsc",
     "start": "node dist/server.js",
     "vercel": "vercel dev",
-    "vercel-build":"npx prisma migrate deploy"
+    "vercel-build": "npx prisma migrate deploy"
   },
   "keywords": [],
   "author": "",
@@ -18,7 +18,7 @@
     "@fastify/cors": "^11.1.0",
     "@fastify/jwt": "^10.0.0",
     "@fastify/multipart": "^9.2.1",
-    "@fastify/static": "^8.2.0",
+    "@fastify/static": "^9.1.3",
     "@fastify/swagger": "^9.5.2",
     "@fastify/swagger-ui": "^5.2.3",
     "@prisma/client": "^6.16.2",
@@ -26,8 +26,10 @@
     "dotenv": "^17.2.3",
     "fastify": "^5.6.1",
     "fastify-firebase": "1.1.1",
+    "fastify-plugin": "^5.1.0",
     "fastify-type-provider-zod": "^6.0.0",
     "firebase-admin": "^13.5.0",
+    "mqtt": "^5.15.1",
     "zod": "^4.1.11"
   },
   "devDependencies": {

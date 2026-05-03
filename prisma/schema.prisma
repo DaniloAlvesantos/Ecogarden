@@ -22,7 +22,7 @@ model User {
 }
 
 model Garden {
-  id        String        @id @default(cuid())
+  id        String   @id @default(cuid())
   name      String
   userId    String
   lat       Float
@@ -30,8 +30,9 @@ model Garden {
   imgUrl    String
   cep       String
   number    Int
-  createdAt DateTime      @default(now())
+  createdAt DateTime @default(now())
   tamanhoM2 Int
+  deviceId  String?   @unique
 
   owner  User          @relation("UserGardens", fields: [userId], references: [id])
   plants PlantGarden[]

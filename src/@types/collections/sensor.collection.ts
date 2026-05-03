@@ -4,14 +4,14 @@ interface BaseSensorData {
   timestamp: Timestamp;
 }
 
-export interface HumiditySensorData extends BaseSensorData {
-  type: "HUMIDITY";
+export interface SoloHumidity extends BaseSensorData {
+  type: "solo_humidity";
   percentage: number;
 }
 
-export interface WaterLevelSensorData extends BaseSensorData {
-  type: "WATER_LEVEL";
-  depth_cm: number;
+export interface FlowRate extends BaseSensorData {
+  type: "flow_rate";
+  rate: number;
 }
 
-export type SensorData = HumiditySensorData | WaterLevelSensorData;
+export type SensorCollectionData = SoloHumidity | FlowRate;

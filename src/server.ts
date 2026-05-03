@@ -15,6 +15,7 @@ import fastifySwagger from "@fastify/swagger";
 import fastifyFirebase from "fastify-firebase";
 import fastifySwaggerUi from "@fastify/swagger-ui";
 import fastifyMultipart from "@fastify/multipart";
+import mqttPlugin from "./plugin/mqtt";
 
 import path from "node:path";
 
@@ -44,6 +45,7 @@ app.register(fastifyCors, {
 app.register(fastifyJwt, {
   secret: "ecogarden-api-2025",
 });
+app.register(mqttPlugin);
 
 app.register(fastifySwagger, {
   openapi: {
@@ -55,13 +57,14 @@ app.register(fastifySwagger, {
   transform: jsonSchemaTransform,
 });
 
-app.register(fastifyMultipart); // 👈 Correctly registered here
+app.register(fastifyMultipart);
 app.register(fastifyFirebase, serviceAccount as any);
+app.register(mqttPlugin)
 
 app.register(fastifySwaggerUi, {
   routePrefix: "/docs",
 });
-// END PLUGINS / CONFIGS
+
 
 /* ROUTES */
 app.get("/", () => "hello world");
