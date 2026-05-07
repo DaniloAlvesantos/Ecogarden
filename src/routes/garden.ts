@@ -1,4 +1,4 @@
-import z, { record } from "zod";
+import z from "zod";
 import { URLSearchParams } from "url";
 import { MapData } from "../lib/mapData.js";
 import { prisma } from "../lib/prismaClient.js";
@@ -24,7 +24,6 @@ export async function GardenRoute(app: FastifyTypedInstance) {
     },
     async (_, res) => {
       const gardens = await prisma.garden.count();
-
       return res.send({ gardens }).code(200);
     },
   );
@@ -55,14 +54,16 @@ export async function GardenRoute(app: FastifyTypedInstance) {
         place: z.string(),
         number: z.string().transform((val) => parseInt(val, 10)),
         tamanhoM2: z.string().transform((val) => parseInt(val, 10)),
+        deviceId: z.string(),
       });
 
       const formFields = {
-        name: data.fields.name?.value,
-        cep: data.fields.cep?.value,
-        place: data.fields.place?.value,
-        number: data.fields.number?.value,
-        tamanhoM2: data.fields.tamanhoM2?.value,
+        name: (data.fields.name as any)?.value,
+        cep: (data.fields.cep as any)?.value,
+        place: (data.fields.place as any)?.value,
+        number: (data.fields.number as any)?.value,
+        tamanhoM2: (data.fields.tamanhoM2 as any)?.value,
+        deviceId: (data.fields.deviceId as any)?.value,
       };
 
       const validated = gardenSchema.safeParse(formFields);
@@ -77,7 +78,7 @@ export async function GardenRoute(app: FastifyTypedInstance) {
           .code(400);
       }
 
-      const { cep, name, number, tamanhoM2, place } = validated.data;
+      const { cep, name, number, tamanhoM2, place, deviceId } = validated.data;
 
       const placeParams = new URLSearchParams(place).toString();
       const response = await MapData.get<MapDataCoding>(
@@ -88,10 +89,6 @@ export async function GardenRoute(app: FastifyTypedInstance) {
 
       let garden = await prisma.garden.findUnique({
         where: {
-          lat_lng: {
-            lat: Number(mapData.lat),
-            lng: Number(mapData.lng),
-          },
           cep_number: {
             cep,
             number,
@@ -104,7 +101,6 @@ export async function GardenRoute(app: FastifyTypedInstance) {
       }
 
       const uploadRes = await uploadFile(data, name);
-      console.log(uploadRes);
 
       garden = await prisma.garden.create({
         data: {
@@ -115,6 +111,7 @@ export async function GardenRoute(app: FastifyTypedInstance) {
           number,
           tamanhoM2,
           imgUrl: uploadRes.imgUrl,
+          deviceId: deviceId.replace(/:/g, ""),
           owner: {
             connect: { id: req.user.sub },
           },
@@ -132,7 +129,7 @@ export async function GardenRoute(app: FastifyTypedInstance) {
         solo_humidity: 0,
         pump: false,
         flow_rate: 0,
-        message: "",
+        message: "Horta inicializada via API",
       });
 
       return res.send({ data: garden, collection, state }).code(201);
@@ -154,49 +151,32 @@ export async function GardenRoute(app: FastifyTypedInstance) {
       const { id } = req.params;
 
       const garden = await prisma.garden.findUnique({
-        where: {
-          id,
-        },
+        where: { id },
         include: {
-          owner: {
-            select: {
-              name: true,
-              email: true,
-            },
-          },
-          plants: {
-            select: {
-              plant: true,
-              quant: true,
-            },
-          },
+          owner: { select: { name: true, email: true } },
+          plants: { select: { plant: true, quant: true } },
         },
       });
 
-      if (!garden) {
-        return res.send({ error: "Garden not found" }).code(404);
-      }
+      if (!garden) return res.send({ error: "Garden not found" }).code(404);
 
       const cepResponse = await CEP.get<CEPType>(`/${garden.cep}/json`);
-
-      if (!cepResponse) {
-        return res.send({ error: "CEP not found" }).code(404);
-      }
+      if (!cepResponse) return res.send({ error: "CEP not found" }).code(404);
 
       const cepData = cepResponse.data;
 
-      const irrigation = await firestore_db
+      const irrigationSnap = await firestore_db
         .collection("garden")
         .doc(garden.id)
         .collection("irrigations")
         .orderBy("timestamp", "desc")
         .get();
 
-      const irrigations = irrigation.docs.map((doc) => {
-        const data = doc.data();
+      const irrigations = irrigationSnap.docs.map((doc) => {
+        const d = doc.data();
         return {
-          ...data,
-          timestamp: data.timestamp.toDate().toISOString(),
+          ...d,
+          timestamp: d.timestamp.toDate().toISOString(),
         };
       });
 
@@ -204,12 +184,10 @@ export async function GardenRoute(app: FastifyTypedInstance) {
         q: { city: cepData.localidade },
       });
 
-      const degrees = weather?.current.temp_c;
-
       const data = {
         garden: {
           ...garden,
-          imgUrl: `http://localhost:3333` + garden.imgUrl,
+          imgUrl: `http://localhost:3333${garden.imgUrl}`,
         },
         location: {
           city: cepData.localidade,
@@ -217,9 +195,7 @@ export async function GardenRoute(app: FastifyTypedInstance) {
           street: cepData.logradouro,
         },
         irrigationHistory: irrigations,
-        weather: {
-          degrees,
-        },
+        weather: { degrees: weather?.current.temp_c },
       };
 
       return res.send({ data }).code(200);
@@ -237,12 +213,7 @@ export async function GardenRoute(app: FastifyTypedInstance) {
     async (req, res) => {
       const gardens = await prisma.garden.findMany({
         include: {
-          owner: {
-            select: {
-              name: true,
-              email: true,
-            },
-          },
+          owner: { select: { name: true, email: true } },
         },
       });
 
@@ -253,7 +224,7 @@ export async function GardenRoute(app: FastifyTypedInstance) {
         return {
           garden: {
             ...garden,
-            imgUrl: `http://localhost:3333` + garden.imgUrl,
+            imgUrl: `http://localhost:3333${garden.imgUrl}`,
           },
           location: {
             city: cepData.localidade,
@@ -279,22 +250,11 @@ export async function GardenRoute(app: FastifyTypedInstance) {
     },
     async (req, res) => {
       const gardens = await prisma.garden.findMany({
-        where: {
-          owner: {
-            id: req.user.sub,
-          },
-        },
+        where: { owner: { id: req.user.sub } },
         include: {
-          owner: {
-            select: {
-              name: true,
-              email: true,
-            },
-          },
+          owner: { select: { name: true, email: true } },
         },
       });
-
-      if (!gardens) return res.send({ error: "Gardens not found" }).code(404);
 
       return res.send({ gardens }).code(200);
     },
@@ -314,11 +274,12 @@ export async function GardenRoute(app: FastifyTypedInstance) {
           place: z.string(),
           number: z.string().transform((val) => parseInt(val, 10)),
           tamanhoM2: z.string().transform((val) => parseInt(val, 10)),
+          deviceId: z.string(),
         }),
       },
     },
     async (req, res) => {
-      const { cep, name, number, place, tamanhoM2, id } = req.body;
+      const { cep, name, number, place, tamanhoM2, id, deviceId } = req.body;
       console.log(id);
 
       const placeParams = new URLSearchParams(place).toString();
@@ -347,6 +308,10 @@ export async function GardenRoute(app: FastifyTypedInstance) {
           cep,
           number,
           tamanhoM2,
+          deviceId: deviceId.replace(/:/g, ""),
+          owner: {
+            connect: { id: req.user.sub },
+          },
         },
       });
 
@@ -378,25 +343,18 @@ export async function GardenRoute(app: FastifyTypedInstance) {
       const userId = req.user.sub;
       const { gardenId, plants } = req.body;
 
-      // Verify garden ownership
       const garden = await prisma.garden.findUnique({
         where: { id: gardenId },
       });
 
-      if (!garden) {
-        return res.status(404).send({ error: "Garden not found" });
-      }
+      if (!garden) return res.status(404).send({ error: "Garden not found" });
+      if (garden.userId !== userId)
+        return res.status(403).send({ error: "Forbidden" });
 
-      if (garden.userId !== userId) {
-        return res.status(403).send({ error: "You do not own this garden" });
-      }
-
-      const results = [];
+      const results: any[] = [];
 
       for (const { plantId, quant } of plants) {
-        const plant = await prisma.plant.findUnique({
-          where: { id: plantId },
-        });
+        const plant = await prisma.plant.findUnique({ where: { id: plantId } });
 
         if (!plant) {
           results.push({
@@ -408,54 +366,24 @@ export async function GardenRoute(app: FastifyTypedInstance) {
         }
 
         const existing = await prisma.plantGarden.findUnique({
-          where: {
-            plantId_gardenId: {
-              plantId,
-              gardenId,
-            },
-          },
+          where: { plantId_gardenId: { plantId, gardenId } },
         });
 
         if (existing) {
           const updated = await prisma.plantGarden.update({
-            where: {
-              plantId_gardenId: {
-                plantId,
-                gardenId,
-              },
-            },
-            data: {
-              quant: existing.quant + quant,
-            },
+            where: { plantId_gardenId: { plantId, gardenId } },
+            data: { quant: existing.quant + quant },
           });
-
-          results.push({
-            plantId,
-            status: "updated",
-            plantGarden: updated,
-          });
+          results.push({ plantId, status: "updated", plantGarden: updated });
         } else {
           const created = await prisma.plantGarden.create({
-            data: {
-              plantId,
-              gardenId,
-              quant,
-              dataPlantio: new Date(),
-            },
+            data: { plantId, gardenId, quant, dataPlantio: new Date() },
           });
-
-          results.push({
-            plantId,
-            status: "created",
-            plantGarden: created,
-          });
+          results.push({ plantId, status: "created", plantGarden: created });
         }
       }
 
-      return res.send({
-        message: "Process completed",
-        results,
-      });
+      return res.send({ message: "Process completed", results });
     },
   );
 
@@ -464,32 +392,21 @@ export async function GardenRoute(app: FastifyTypedInstance) {
     {
       schema: {
         tags: ["garden"],
-        description: "Get necesseries datas for dashboard",
+        description: "Dashboard stats",
       },
       onRequest: [authenticate],
     },
     async (req, res) => {
       const userId = req.user.sub;
-
-      const gardens = await prisma.garden.findMany({
-        where: {
-          userId,
-        },
-      });
-
-      const sortedGarndes = gardens.sort(
+      const gardens = await prisma.garden.findMany({ where: { userId } });
+      const sorted = gardens.sort(
         (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
       );
 
-      const gardensCount = gardens.length;
-
       return res
         .send({
-          gardensCount,
-          recentGarden: sortedGarndes.map((d) => ({
-            name: d.name,
-            id: d.id,
-          })),
+          gardensCount: gardens.length,
+          recentGarden: sorted.map((d) => ({ name: d.name, id: d.id })),
         })
         .code(200);
     },

@@ -1,4 +1,3 @@
-// server.ts
 import { z } from "zod";
 import { prisma } from "../lib/prismaClient.js";
 import { authenticate } from "../plugin/jwt.js";
