@@ -2,37 +2,46 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 
-const char* ssid = "Miguel";
-const char* password = "daniloyasmin";
-const char* mqtt_server = "broker.hivemq.com";
+const char* ssid = "Lab 3";
+const char* password = "fatecitapira";
+const char* mqtt_server = "192.168.0.107";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-// PINS
+// --- PINS ---
 const int humidityPin = 34;
-const int pumpPin = 7;
-const int flowRatePin = 10;
+const int pumpPin = 13;
+const int flowRatePin = 12;
 
-/* START HUMIDITY SETUP*/
+// --- START HUMIDITY SETUP ---
 const int dry_val = 3500;
 const int wet_val = 990;
+
+const int min_h = 40;
+const int max_h = 80;
+const int max_pump_sec = 30 * 1000UL; // 30s
+//const long interval = 30 * 60 * 1000UL; // 30min
+const long interval = 1 * 60 * 1000UL;
 
 typedef struct {
   int h;
   int p;
 } humidityState;
-/* END HUMIDITY SETUP*/
+// --- END HUMIDITY SETUP ---
 
-/* START FLOW RATE SETUP */
+// --- START FLOW RATE SETUP ---
 const float pulsePerLiters = 6740.0; 
 const float flowFactor = 112.33;
 
 volatile unsigned long pulseCounter = 0;
 unsigned long generatedPulses = 0;
-unsigned long previousTime = 0;
+unsigned long previousFlowTime = 0;
 
 volatile unsigned long previousPulseTime = 0;
+
+unsigned long pumpStartTime = 0;
+bool isPumpOn = false;
 
 typedef struct {
   float volume_total;
@@ -47,7 +56,7 @@ void IRAM_ATTR icr_sensor() {
     previousPulseTime = tempoAtual;
   }
 }
-/* END FLOW RATE SETUP */
+// --- END FLOW RATE SETUP ---
 
 char deviceId[13];
 char stateTopic[50];
@@ -63,12 +72,19 @@ void setUpStateTopic() {
 }
 
 // pumpState is true if pumped the water
-void sendGardenData(float humidity, float temp, bool pumpState, float flowRate) {
+// void sendGardenData(int humidity, int temp, bool pumpState, int flowRate, char* message) {
+void sendGardenData(int humidity, bool pumpState, float flowRate, char* message) {
   JsonDocument doc;
 
   doc["solo_humidity"] = humidity;
   doc["pump"] = pumpState;
   doc["flow_rate"] = flowRate;
+  
+  if(message != nullptr) {
+    doc["message"] = message;
+  } else {
+    doc["message"] = nullptr; // Correção do 'null'
+  }
 
   char buffer[256];
   serializeJson(doc, buffer);
@@ -94,7 +110,7 @@ flowState getFlow() {
   
   state.atualizado = false; 
 
-  if (millis() - previousTime >= 1000) {
+  if (millis() - previousFlowTime >= 1000) {
     
     noInterrupts();
     unsigned long pulsosNoSegundo = pulseCounter;
@@ -112,10 +128,41 @@ flowState getFlow() {
     
     state.atualizado = true; 
 
-    previousTime = millis();
+    previousFlowTime = millis();
   }
 
   return state;
+}
+
+unsigned long lastWorkflowRun = 0;
+
+void getWorkflow() {
+  humidityState h_state = getSoloHumidty();
+  
+  if(h_state.p <= min_h && !isPumpOn) {
+    isPumpOn = true;
+    generatedPulses = 0;
+    pumpStartTime = millis();
+    digitalWrite(pumpPin, LOW);
+    sendGardenData(h_state.p, true, 0.0, "Starting irrigation...");
+  } 
+
+  if(isPumpOn) {
+    flowState f_state = getFlow();
+    h_state = getSoloHumidty();
+
+    bool stopReasonTime = (millis() - pumpStartTime) >= max_pump_sec;
+    bool stopReasonHum = h_state.p >= max_h;
+
+    if(stopReasonTime || stopReasonHum) {
+      digitalWrite(pumpPin, HIGH);
+      
+      const char* msg = stopReasonTime ? "Max pump time reached!" : "Success";
+      sendGardenData(h_state.p, isPumpOn, f_state.volume_total, (char*)msg);
+
+      isPumpOn = false;
+    }
+  }
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
@@ -128,8 +175,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
     Serial.print(error.c_str());
     return;
   }
-
-  const char* command = doc["command"];
 }
 
 void reconnect() {
@@ -137,11 +182,12 @@ void reconnect() {
     Serial.print("Attemping MQTT connection...");
     String clientId = "GARDEN_FATEC";
     clientId += String(random(0xffff), HEX);
+
     if(client.connect(clientId.c_str())) {
       Serial.println("Connected");
 
       client.subscribe(stateTopic);
-      client.publish(stateTopic, "Connected!!");
+      //sendGardenData(0, false, 0.0, "Conectei!! : )");
     } else {
       Serial.print("Failed, rc=");
       Serial.print(client.state());
@@ -166,11 +212,17 @@ void setup() {
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
 
+  pinMode(humidityPin, INPUT);
+
+  /*PUMP (rele)*/
+  pinMode(pumpPin, OUTPUT);
+  digitalWrite(pumpPin, HIGH);
+
   /*Flow Rate*/
   pinMode(flowRatePin, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(flowRatePin), icr_sensor, RISING);
-  
 }
+
 
 void loop() {
   if(!client.connected()) {
@@ -178,4 +230,12 @@ void loop() {
   }
 
   client.loop();
+
+  unsigned long currentMilis = millis();
+
+  if(currentMilis - lastWorkflowRun >= interval || isPumpOn) {
+    getWorkflow();
+
+    if(!isPumpOn) lastWorkflowRun = currentMilis;
+  }
 }
