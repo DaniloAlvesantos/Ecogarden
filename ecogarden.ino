@@ -11,8 +11,8 @@ PubSubClient client(espClient);
 
 // --- PINS ---
 const int humidityPin = 34;
-const int pumpPin = 13;
-const int flowRatePin = 12;
+const int pumpPin = 14;
+const int flowRatePin = 27;
 
 // --- START HUMIDITY SETUP ---
 const int dry_val = 3500;
@@ -21,8 +21,8 @@ const int wet_val = 990;
 const int min_h = 40;
 const int max_h = 80;
 const int max_pump_sec = 30 * 1000UL; // 30s
-//const long interval = 30 * 60 * 1000UL; // 30min
-const long interval = 1 * 60 * 1000UL;
+// const long interval = 30 * 60 * 1000UL; // 30min
+const long interval = 0.5 * 60 * 1000UL; // 30s
 
 typedef struct {
   int h;
@@ -138,14 +138,15 @@ unsigned long lastWorkflowRun = 0;
 
 void getWorkflow() {
   humidityState h_state = getSoloHumidty();
-  
+  Serial.println(h_state.p);
   if(h_state.p <= min_h && !isPumpOn) {
     isPumpOn = true;
     generatedPulses = 0;
+    pulseCounter = 0;
     pumpStartTime = millis();
     digitalWrite(pumpPin, LOW);
-    sendGardenData(h_state.p, true, 0.0, "Starting irrigation...");
-  } 
+    sendGardenData(h_state.p, true, 0.0, (char*)"Starting irrigation...");
+  }
 
   if(isPumpOn) {
     flowState f_state = getFlow();
