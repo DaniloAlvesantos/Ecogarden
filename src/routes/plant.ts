@@ -70,8 +70,6 @@ export async function PlantRoute(app: FastifyTypedInstance) {
     async (req, res) => {
       const { name } = req.params;
 
-      console.log(name)
-
       let plants = await prisma.plant.findMany({
         where: {
           nomeComum: {

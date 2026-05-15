@@ -4,14 +4,14 @@ import { firestore_db } from "../lib/firebase/admin.js";
 interface recordIrrigationEventProps {
   gardenId: string;
   humidity: number;
-  temperature: number;
+  // temperature: number;
   volume: number;
 }
 
 export async function recordIrrigationEvent({
   gardenId,
   humidity,
-  temperature,
+  // temperature,
   volume,
 }: recordIrrigationEventProps) {
   const irrigationCollectionRef = firestore_db
@@ -21,19 +21,22 @@ export async function recordIrrigationEvent({
 
   const irrigationData = {
     humidity: humidity,
-    temperature: temperature,
+    // temperature: temperature,
     volume: volume,
     timestamp: Timestamp.now(),
   };
 
-  if(humidity == 0 && temperature == 0 && volume == 0) {
+  // if(humidity == 0 && temperature == 0 && volume == 0) {
+  //   irrigationData["initial"] = true;
+  // }
+
+  if(humidity == 0 && volume == 0) {
     irrigationData["initial"] = true;
   }
 
   try {
     const newDocRef = await irrigationCollectionRef.add(irrigationData);
 
-    console.log("Novo documento de irrigação criado com ID:", newDocRef.id);
     return newDocRef.id;
   } catch (error) {
     console.error("Erro ao adicionar documento de irrigação:", error);

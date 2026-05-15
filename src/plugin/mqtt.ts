@@ -15,19 +15,19 @@ function mqttPlugin(fastify: FastifyInstance) {
 
     console.log({topic, message: JSON.parse(message.toString()) })
 
-    // const garden = await prisma.garden.findUnique({
-    //   where: {
-    //     deviceId,
-    //   },
-    //   select: {
-    //     id: true,
-    //     name: true,
-    //   },
-    // });
+    const garden = await prisma.garden.findUnique({
+      where: {
+        deviceId,
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
 
-    // if (!garden) return;
+    if (!garden) return;
 
-    // await recordSensorData(garden.id, state);
+    await recordSensorData(garden.id, state);
   });
 
   fastify.decorate("mqtt", mqttClient);

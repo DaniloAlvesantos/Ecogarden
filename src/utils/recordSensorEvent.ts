@@ -19,11 +19,15 @@ export async function recordSensorData(
       state: dataToSave,
     });
 
+    if(dataToSave.message !== "Success") {
+      return;
+    }
+
     await recordIrrigationEvent({
       gardenId,
       humidity: dataToSave.solo_humidity,
-      temperature: 0,
-      volume: dataToSave.flow_rate,
+      // temperature: 0,
+      volume: Number(dataToSave.flow_rate.toFixed(3)),
     });
   } catch (err) {
     console.error("Erro ao gravar no Firestore:", err);

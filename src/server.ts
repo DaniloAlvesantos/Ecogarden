@@ -59,12 +59,10 @@ app.register(fastifySwagger, {
 
 app.register(fastifyMultipart);
 app.register(fastifyFirebase, serviceAccount as any);
-app.register(mqttPlugin)
 
 app.register(fastifySwaggerUi, {
   routePrefix: "/docs",
 });
-
 
 /* ROUTES */
 app.get("/", () => "hello world");

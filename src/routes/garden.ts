@@ -38,101 +38,146 @@ export async function GardenRoute(app: FastifyTypedInstance) {
       },
     },
     async (req, res) => {
-      const data = await req.file();
+      try {
+        const data = await req.file();
 
-      if (!data) {
-        return res.send({ error: "No file or form data received" }).code(400);
-      }
+        if (!data) {
+          return res.code(400).send({
+            error: "No file or form data received",
+          });
+        }
 
-      if (!data.file) {
-        return res.send({ error: "Image not found" }).code(400);
-      }
+        if (!data.file) {
+          return res.code(400).send({
+            error: "Image not found",
+          });
+        }
 
-      const gardenSchema = z.object({
-        name: z.string(),
-        cep: z.string(),
-        place: z.string(),
-        number: z.string().transform((val) => parseInt(val, 10)),
-        tamanhoM2: z.string().transform((val) => parseInt(val, 10)),
-        deviceId: z.string(),
-      });
+        const gardenSchema = z.object({
+          name: z.string(),
+          cep: z.string(),
+          place: z.string(),
+          number: z.string().transform((val) => parseInt(val, 10)),
+          tamanhoM2: z.string().transform((val) => parseInt(val, 10)),
+          deviceId: z.string(),
+        });
 
-      const formFields = {
-        name: (data.fields.name as any)?.value,
-        cep: (data.fields.cep as any)?.value,
-        place: (data.fields.place as any)?.value,
-        number: (data.fields.number as any)?.value,
-        tamanhoM2: (data.fields.tamanhoM2 as any)?.value,
-        deviceId: (data.fields.deviceId as any)?.value,
-      };
+        const formFields = {
+          name: (data.fields.name as any)?.value,
+          cep: (data.fields.cep as any)?.value,
+          place: (data.fields.place as any)?.value,
+          number: (data.fields.number as any)?.value,
+          tamanhoM2: (data.fields.tamanhoM2 as any)?.value,
+          deviceId: (data.fields.deviceId as any)?.value,
+        };
 
-      const validated = gardenSchema.safeParse(formFields);
+        const validated = gardenSchema.safeParse(formFields);
 
-      if (!validated.success) {
-        req.log.error(validated.error);
-        return res
-          .send({
-            error: "Validation failed.",
+        if (!validated.success) {
+          req.log.error(validated.error);
+
+          return res.code(400).send({
+            error: "Validation failed",
             details: validated.error.issues,
-          })
-          .code(400);
-      }
+          });
+        }
 
-      const { cep, name, number, tamanhoM2, place, deviceId } = validated.data;
+        const { cep, name, number, tamanhoM2, place, deviceId } =
+          validated.data;
 
-      const placeParams = new URLSearchParams(place).toString();
-      const response = await MapData.get<MapDataCoding>(
-        `/geocoding.php?query=${placeParams}&country=br`,
-      );
+        const placeParams = new URLSearchParams({
+          query: place,
+        }).toString();
 
-      const mapData = response.data.data;
+        const response = await MapData.get<MapDataCoding>(
+          `/geocoding.php?${placeParams}&country=br`,
+        );
 
-      let garden = await prisma.garden.findUnique({
-        where: {
-          cep_number: {
+        /**
+         * Many geocoding APIs return arrays.
+         * Adjust according to your API response shape.
+         */
+        const mapData = Array.isArray(response.data.data)
+          ? response.data.data[0]
+          : response.data.data;
+
+        if (!mapData) {
+          return res.code(400).send({
+            error: "Could not geocode address",
+          });
+        }
+
+        let garden = await prisma.garden.findUnique({
+          where: {
+            cep_number: {
+              cep,
+              number,
+            },
+          },
+        });
+
+        if (garden) {
+          return res.code(400).send({
+            error: "Garden already exists",
+          });
+        }
+
+        const uploadRes = await uploadFile(data, name);
+
+        garden = await prisma.garden.create({
+          data: {
+            name,
+            lat: Number(mapData.lat),
+            lng: Number(mapData.lng),
             cep,
             number,
+            tamanhoM2,
+            imgUrl: uploadRes.imgUrl,
+            deviceId: deviceId.replace(/:/g, ""),
+            owner: {
+              connect: {
+                id: req.user.sub,
+              },
+            },
           },
-        },
-      });
+        });
 
-      if (garden) {
-        return res.send({ error: "Garden Already exists." }).code(400);
+        /**
+         * Firebase/Firestore errors should not
+         * break garden creation.
+         */
+        let collection;
+        let state;
+
+        try {
+          collection = await recordIrrigationEvent({
+            gardenId: garden.id,
+            humidity: 0,
+            volume: 0,
+          });
+
+          state = await recordSensorData(garden.id, {
+            solo_humidity: 0,
+            pump: false,
+            flow_rate: 0,
+            message: "Horta inicializada via API",
+          });
+        } catch (firebaseError) {
+          req.log.error(firebaseError);
+        }
+
+        return res.code(201).send({
+          data: garden,
+          collection,
+          state,
+        });
+      } catch (error) {
+        req.log.error(error);
+
+        return res.code(500).send({
+          error: "Internal server error",
+        });
       }
-
-      const uploadRes = await uploadFile(data, name);
-
-      garden = await prisma.garden.create({
-        data: {
-          name,
-          lat: mapData.lat,
-          lng: mapData.lng,
-          cep,
-          number,
-          tamanhoM2,
-          imgUrl: uploadRes.imgUrl,
-          deviceId: deviceId.replace(/:/g, ""),
-          owner: {
-            connect: { id: req.user.sub },
-          },
-        },
-      });
-
-      const collection = await recordIrrigationEvent({
-        gardenId: garden.id,
-        humidity: 0,
-        temperature: 0,
-        volume: 0,
-      });
-
-      const state = await recordSensorData(garden.id, {
-        solo_humidity: 0,
-        pump: false,
-        flow_rate: 0,
-        message: "Horta inicializada via API",
-      });
-
-      return res.send({ data: garden, collection, state }).code(201);
     },
   );
 
@@ -280,7 +325,6 @@ export async function GardenRoute(app: FastifyTypedInstance) {
     },
     async (req, res) => {
       const { cep, name, number, place, tamanhoM2, id, deviceId } = req.body;
-      console.log(id);
 
       const placeParams = new URLSearchParams(place).toString();
       const response = await MapData.get<MapDataCoding>(
@@ -332,7 +376,7 @@ export async function GardenRoute(app: FastifyTypedInstance) {
             .array(
               z.object({
                 plantId: z.number(),
-                quant: z.number().min(1),
+                quant: z.number().min(0),
               }),
             )
             .min(1),
@@ -370,9 +414,17 @@ export async function GardenRoute(app: FastifyTypedInstance) {
         });
 
         if (existing) {
+          if (quant === 0) {
+            const deleted = await prisma.plantGarden.delete({
+              where: { plantId_gardenId: { plantId, gardenId } },
+            });
+            results.push({ plantId, status: "deleted", plantGarden: deleted });
+            continue;
+          }
+
           const updated = await prisma.plantGarden.update({
             where: { plantId_gardenId: { plantId, gardenId } },
-            data: { quant: existing.quant + quant },
+            data: { quant: quant },
           });
           results.push({ plantId, status: "updated", plantGarden: updated });
         } else {
