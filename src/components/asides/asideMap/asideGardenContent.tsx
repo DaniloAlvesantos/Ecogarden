@@ -4,7 +4,7 @@ import { AsideHeader } from "./asideHeader";
 import { Historico } from "./historico";
 import { HortaInfo } from "./hortaInfo";
 import { Plantas } from "./plantas";
-import { Sensores } from "./sensores";
+// import { Sensores } from "./sensores";
 
 import "./style.scss";
 
@@ -17,9 +17,9 @@ export const AsideGardenContent = () => (
         <HortaInfo />
       </AccordionMap>
 
-      <AccordionMap id="two" title="Sensores">
+      {/* <AccordionMap id="two" title="Sensores">
         <Sensores />
-      </AccordionMap>
+      </AccordionMap> */}
 
       <AccordionMap id="three" title="Histórico Irrigação">
         <Historico />

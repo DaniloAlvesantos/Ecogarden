@@ -9,6 +9,7 @@ import { LoginPage } from "../pages/login";
 import { MapPage } from "../pages/map";
 import { MyGardens } from "../pages/myGardens";
 import { SignUpPage } from "../pages/signUp";
+import { CreatePlantView } from "../views/createPlant/createPlant";
 import { NotFoundPage } from "../views/notFound/notFound";
 
 export const AppRoutes = () => {
@@ -47,6 +48,14 @@ export const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Garden />
+          </ProtectedRoute>
+        }
+      />
+      <Route 
+        path="/dashboard/create/plant"
+        element={
+          <ProtectedRoute>
+            <CreatePlantView />
           </ProtectedRoute>
         }
       />

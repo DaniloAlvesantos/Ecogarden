@@ -26,7 +26,7 @@ export const Historico = () => {
           <LuAlarmClock />
           {new Date(item.timestamp).toLocaleDateString("pt-BR")}
           <MdOutlineWaterDrop />
-          {item.volume}ml
+          {item.volume.toFixed(3)}L
         </li>
       ))}
     </ul>

@@ -20,7 +20,9 @@ export function DashboardChart({ gardenId }: DashboardChartProps) {
   const [history, setHistory] = useState<Irrigations[]>([]);
 
   useEffect(() => {
-    irrigationHistory(gardenId).then(setHistory).catch(console.error);
+    const unsubscribe = irrigationHistory(gardenId, setHistory);
+
+    return () => unsubscribe();
   }, [gardenId]);
 
   const data = history
@@ -52,7 +54,7 @@ export function DashboardChart({ gardenId }: DashboardChartProps) {
             }
           />
 
-          <YAxis hide={screen.width < 800} />
+          <YAxis hide={window.innerWidth < 800} />
 
           <Tooltip
             labelFormatter={(value: Date) =>
@@ -70,10 +72,13 @@ export function DashboardChart({ gardenId }: DashboardChartProps) {
               switch (name) {
                 case "temperatura":
                   return [`${value}°C`, "Temperatura"];
+
                 case "umidade":
                   return [`${value}%`, "Umidade"];
+
                 case "volume":
                   return [`${value} mL`, "Volume"];
+
                 default:
                   return [value, name];
               }
@@ -82,7 +87,9 @@ export function DashboardChart({ gardenId }: DashboardChartProps) {
           />
 
           <Line type="monotone" dataKey="temperatura" stroke="#FFC107" />
+
           <Line type="monotone" dataKey="umidade" stroke="#0D6EFD" />
+
           <Line type="monotone" dataKey="volume" stroke="#188754" />
         </LineChart>
       </ResponsiveContainer>

@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 
 import { GardenDetails } from "../../components/garden/gardenDetails";
 import { Header } from "../../components/header";
+import { ToastDashboard } from "../../components/toast";
 import { useGetGarden } from "../../hooks/useGetGarden";
 import { ErrorView } from "../error/error";
 
@@ -50,6 +51,7 @@ export const GardenView = () => {
       />
       <div className="min-vh-100">
         <GardenDetails initialGardenData={gardenData} />
+        <ToastDashboard gardenId={gardenId} />
       </div>
     </>
   );

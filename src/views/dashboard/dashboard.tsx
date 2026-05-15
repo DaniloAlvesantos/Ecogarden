@@ -43,23 +43,15 @@ export const DashboardView = () => {
             className="form-select mb-4"
             aria-label="Trocar horta"
             onChange={handleGardenChange}
+            value={selectedGarden}
           >
-            {data.recentGarden.map((garden, i) => {
-              if (i === 0)
-                return (
-                  <option key={garden.id} value={garden.id} selected>
-                    {garden.name}
-                  </option>
-                );
-
-              return (
-                <option key={garden.id} value={garden.id}>
-                  {garden.name}
-                </option>
-              );
-            })}
+            {data.recentGarden.map((garden) => (
+              <option key={garden.id} value={garden.id}>
+                {garden.name}
+              </option>
+            ))}
           </select>
-          <DashboardChart gardenId={selectedGarden} />
+          {selectedGarden && <DashboardChart gardenId={selectedGarden} />}
         </div>
       ) : (
         <div className="container-fluid">

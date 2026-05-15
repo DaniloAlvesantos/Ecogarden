@@ -1,14 +1,16 @@
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, useForm, Controller } from "react-hook-form";
 import { LuPlus, LuTrash } from "react-icons/lu";
+import { Link } from "react-router-dom";
 
 import type { GardenModel } from "../../../types/api/api.garden";
 import { PrimaryButton } from "../../buttons/primary";
-// import { SearchPlant } from "../../formFields/searchPlant";
+import { SearchPlant } from "../../formFields/searchPlant/";
 import { SecondaryInput } from "../../formFields/secondaryInput";
 
 export type AddPlantsFormFields = {
   plants: {
     plantId: number;
+    plantName: string;
     quant: number;
   }[];
 };
@@ -28,14 +30,16 @@ export const AddPlantsForm = ({
     register,
     control,
     handleSubmit,
+    setValue,
     formState: { errors, isValid, isDirty },
   } = useForm<AddPlantsFormFields>({
     mode: "onBlur",
     defaultValues: {
       plants: plants.map((plant) => ({
         plantId: plant.plant.id,
+        plantName: plant.plant.nomeComum,
         quant: plant.quant,
-      })) ?? [{ plantId: 1, quant: 1 }],
+      })) ?? [{ plantId: 0, plantName: "", quant: 1 }],
     },
   });
 
@@ -56,24 +60,48 @@ export const AddPlantsForm = ({
           key={field.id}
           className="border rounded p-3 mb-3 bg-light position-relative"
         >
-          <div className="form-floating mb-3">
-            <SecondaryInput<AddPlantsFormFields>
-              name={`plants.${index}.plantId`}
-              type="number"
-              id={`plantId-${index}`}
-              placeholder="ID da Planta"
-              register={register}
-              errors={errors}
-              required="ID da planta é obrigatório"
-              minLength={{
-                value: 1,
-                message: "ID inválido",
-              }}
+          {/* Hidden plantId field */}
+          <input
+            type="hidden"
+            {...register(`plants.${index}.plantId`, {
+              required: true,
+              min: 0,
+              valueAsNumber: true,
+            })}
+          />
+
+          <div className="mb-3">
+            <label
+              htmlFor={`plantName-${index}`}
+              className="form-label fw-medium"
+            >
+              Planta
+            </label>
+            <Controller
+              control={control}
+              name={`plants.${index}.plantName`}
+              rules={{ required: "Selecione uma planta" }}
+              render={({ field: controllerField }) => (
+                <SearchPlant
+                  defaultValue={controllerField.value}
+                  onSelect={(plant) => {
+                    controllerField.onChange(plant.nomeComum);
+                    setValue(`plants.${index}.plantId`, plant.id, {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                    });
+                  }}
+                />
+              )}
             />
-            <label htmlFor={`plantId-${index}`}>ID da Planta</label>
-            {errors.plants?.[index]?.plantId && (
+            {errors.plants?.[index]?.plantName && (
               <small className="text-danger">
-                {errors.plants[index]?.plantId?.message}
+                {errors.plants[index]?.plantName?.message}
+              </small>
+            )}
+            {errors.plants?.[index]?.plantId && (
+              <small className="text-danger d-block">
+                Selecione uma planta válida da lista
               </small>
             )}
           </div>
@@ -87,9 +115,9 @@ export const AddPlantsForm = ({
               register={register}
               errors={errors}
               required="Quantidade é obrigatória"
-              minLength={{
-                value: 1,
-                message: "Quantidade precisa ser no mínimo 1",
+              min={{
+                value: 0,
+                message: "Quantidade deve ser maior ou igual a 0",
               }}
             />
             <label htmlFor={`plantQuant-${index}`}>Quantidade</label>
@@ -116,7 +144,7 @@ export const AddPlantsForm = ({
       <button
         type="button"
         className="btn btn-outline-success w-100 mb-3 d-flex align-items-center justify-content-center gap-2"
-        onClick={() => append({ plantId: 0, quant: 1 })}
+        onClick={() => append({ plantId: 0, plantName: "", quant: 1 })}
       >
         <LuPlus /> Adicionar Outra Planta
       </button>
@@ -126,7 +154,14 @@ export const AddPlantsForm = ({
         disabled={!isValid || isSaving || !isDirty}
         text={isSaving ? "Salvando..." : "Adicionar Hortaliças"}
       />
-      <button className="btn btn-secondary rounded-pill mx-2">Cancel</button>
+      <Link to="/dashboard/create/plant">
+        <button type="button" className="btn btn-primary rounded-pill mx-2">
+          Adicionar novo tipo de planta
+        </button>
+      </Link>
+      <button type="button" className="btn btn-secondary rounded-pill mx-2">
+        Cancel
+      </button>
     </form>
   );
 };

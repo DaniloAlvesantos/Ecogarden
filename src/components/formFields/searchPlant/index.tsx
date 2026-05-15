@@ -1,62 +1,84 @@
 import { useState, useEffect } from "react";
 
 import { useGetPlants } from "../../../hooks/useGetPlants";
+import type { PlantModel } from "../../../types/api/api.plant";
 
 interface SearchPlantProps {
-  setValue: (value: string) => void;
+  onSelect: (plant: PlantModel) => void;
+  defaultValue?: string;
 }
 
-export function SearchPlant({ setValue }: SearchPlantProps) {
-  const [search, setSearch] = useState("");
+export function SearchPlant({ onSelect, defaultValue = "" }: SearchPlantProps) {
+  const [search, setSearch] = useState(defaultValue);
   const [debounced, setDebounced] = useState("");
+  const [selected, setSelected] = useState(false);
 
-  // debounce (1000ms)
+  // debounce (600ms)
   useEffect(() => {
+    if (selected) return;
     const handler = setTimeout(() => {
       setDebounced(search);
-    }, 1000);
+    }, 600);
     return () => clearTimeout(handler);
-  }, [search]);
+  }, [search, selected]);
 
   const plants = useGetPlants(debounced);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
-    setValue(search);
+    setSelected(false);
   };
 
+  const handleSelect = (plant: PlantModel) => {
+    setSearch(plant.nomeComum);
+    setSelected(true);
+    setDebounced("");
+    onSelect(plant);
+  };
+
+  const showDropdown =
+    !selected && debounced.length >= 3 && !plants.isLoading;
+
   return (
-    <div className="container mt-4" style={{ maxWidth: 550 }}>
-      <label className="form-label fw-bold">Buscar planta</label>
+    <div className="position-relative">
       <input
         type="text"
         className="form-control"
         placeholder="Digite o nome da planta..."
         value={search}
         onChange={handleChange}
-        list="plants"
+        autoComplete="off"
       />
 
-      {/* Loading */}
       {plants.isLoading && (
-        <div className="mt-3 alert alert-info py-2">Carregando...</div>
+        <div className="position-absolute top-100 start-0 w-100 bg-white border rounded shadow-sm z-3 px-3 py-2 text-muted small">
+          Carregando...
+        </div>
       )}
 
-      {/* Results */}
-      {plants.data && plants.data?.length > 0 && (
-        <datalist id="plants">
+      {showDropdown && plants.data && plants.data.length > 0 && (
+        <ul
+          className="list-unstyled position-absolute top-100 start-0 w-100 bg-white border rounded shadow-sm z-3 mb-0"
+          style={{ maxHeight: "12rem", overflowY: "auto" }}
+        >
           {plants.data.map((plant) => (
-            <option key={plant.id} value={plant.nomeComum}>
-              <div className="text-muted" style={{ fontSize: "0.9rem" }}>
+            <li
+              key={plant.id}
+              className="px-3 py-2 border-bottom"
+              style={{ cursor: "pointer" }}
+              onMouseDown={() => handleSelect(plant)}
+            >
+              <span className="fw-medium">{plant.nomeComum}</span>
+              <span className="text-muted small ms-2">
                 {plant.nomeCientifico}
-              </div>
-            </option>
+              </span>
+            </li>
           ))}
-        </datalist>
+        </ul>
       )}
 
-      {debounced && plants.data?.length === 0 && (
-        <div className="alert alert-warning mt-3">
+      {showDropdown && debounced && plants.data?.length === 0 && (
+        <div className="position-absolute top-100 start-0 w-100 bg-white border rounded shadow-sm z-3 px-3 py-2 text-warning small">
           Nenhuma planta encontrada.
         </div>
       )}

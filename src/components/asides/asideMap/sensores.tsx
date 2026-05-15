@@ -1,7 +1,6 @@
 import { collection, doc, onSnapshot } from "firebase/firestore";
 import { useEffect, useState } from "react";
 
-import { EcoGardenApi } from "../../../lib/ecoGarden";
 import { db } from "../../../lib/firebase";
 import { useAuthStore } from "../../../stores/auth";
 import { useMapStore } from "../../../stores/mapStore";
@@ -10,7 +9,7 @@ import { MapCard } from "../../cards/mapCard";
 
 const listenToSensorData = (
   gardenId: string,
-  callback: (data: SensorData[]) => void
+  callback: (data: SensorData[]) => void,
 ) => {
   const ref = collection(doc(db, "garden", gardenId), "sensor");
 
@@ -21,7 +20,7 @@ const listenToSensorData = (
       snapshot.forEach((doc) => readings.push(doc.data() as SensorData));
       callback(readings);
     },
-    (err) => console.error("Sensor listener error:", err)
+    (err) => console.error("Sensor listener error:", err),
   );
 };
 
@@ -49,27 +48,24 @@ export const Sensores = () => {
 
   const humidity = sensors.find((s) => s.type === "HUMIDITY");
   const temperature = currentGarden.weather.degrees;
-  const water = sensors.find((s) => s.type === "WATER_LEVEL");
 
   const isOwner = user
     ? user.email === currentGarden.garden.owner.email
     : false;
 
-  const muckEvent = async () => {
-    const response = await EcoGardenApi.post("/sensor/event", { gardenId });
+  const gardenMinTemp = Math.min(
+    ...currentGarden.garden.plants.map((p) => p.plant.tempMin),
+  );
 
-    return response;
-  };
-
-  const gardenMinTemp = Math.min(...currentGarden.garden.plants.map((p) => p.plant.tempMin));
-
-  const gardenMaxTemp = Math.max(...currentGarden.garden.plants.map((p) => p.plant.tempMax));
+  const gardenMaxTemp = Math.max(
+    ...currentGarden.garden.plants.map((p) => p.plant.tempMax),
+  );
 
   return (
     <>
       {humidity && (
         <MapCard.Sensor
-          header="Umidade"
+          header="Umidade solo"
           title={`${humidity.percentage}%`}
           text={``}
           progress={humidity.percentage}
@@ -86,22 +82,6 @@ export const Sensores = () => {
           progressStyle="warning"
         />
       )}
-
-      {water && (
-        <MapCard.Sensor
-          header="Nível d'água"
-          title={`${water.depth_cm}%`}
-          text="Estimativa baseada no sensor"
-          progress={water.depth_cm}
-          progressStyle="primary"
-        />
-      )}
-
-      {isOwner ? (
-        <button className="btn btn-primary w-100" onClick={muckEvent}>
-          Regar
-        </button>
-      ) : null}
     </>
   );
 };

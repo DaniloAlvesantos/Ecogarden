@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { LuCloudUpload } from "react-icons/lu";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { useGetAdress } from "../../../hooks/useGetCEP";
 import { EcoGardenApi } from "../../../lib/ecoGarden";
@@ -19,6 +19,7 @@ interface GardenFormProps {
   numero: number;
   tamanho: number;
   picture: FileList;
+  deviceId: string;
 }
 
 export const GardenForm = () => {
@@ -38,6 +39,8 @@ export const GardenForm = () => {
   const pictureFile = watch("picture");
   const [preview, setPreview] = useState<string | null>(null);
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     if (!pictureFile || pictureFile.length === 0) {
       setPreview(null);
@@ -53,7 +56,7 @@ export const GardenForm = () => {
 
   const onSubmit = async (data: GardenFormProps) => {
     const isInvalid = Object.entries(data).some(
-      (d) => !d[1] || d[1] === "" || d[1] === 0 || d[1] === null
+      (d) => !d[1] || d[1] === "" || d[1] === 0 || d[1] === null,
     );
 
     if (isInvalid) {
@@ -61,7 +64,7 @@ export const GardenForm = () => {
       return;
     }
 
-    const { name, cep, logradouro, numero, tamanho, picture } = data;
+    const { name, cep, logradouro, numero, tamanho, picture, deviceId } = data;
 
     if (!picture || picture.length === 0) {
       console.error("No image selected");
@@ -74,7 +77,8 @@ export const GardenForm = () => {
     formData.append("place", logradouro);
     formData.append("number", String(numero));
     formData.append("tamanhoM2", String(tamanho));
-    
+    formData.append("deviceId", String(deviceId));
+
     formData.append("img", picture[0], picture[0].name);
 
     for (const [key, value] of formData.entries()) {
@@ -86,16 +90,13 @@ export const GardenForm = () => {
     }
 
     try {
-      const res = await EcoGardenApi.post(
-        "/garden/create", 
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const res = await EcoGardenApi.post("/garden/create", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       console.log("Success:", res.data);
+      navigate("/dashboard/my/gardens");
     } catch (err) {
       if (err instanceof Error) {
         console.error("Error message:", err.message);
@@ -224,6 +225,23 @@ export const GardenForm = () => {
               inputMode="numeric"
               register={register}
               id="garden-tamanho"
+            />
+          </div>
+        </div>
+
+        <div className="row mt-4 mb-4">
+          <div className="col-12">
+            <label className="form-label">Endereço MAC do dispositivo</label>
+            <SecondaryInput<GardenFormProps>
+              type="text"
+              name="deviceId"
+              errors={errors}
+              required="Endereço MAC do dispositivo é obrigatório"
+              placeholder="Endereço MAC do dispositivo"
+              inputMode="numeric"
+              register={register}
+              id="garden-deviceId"
+              autoComplete="nope"
             />
           </div>
         </div>
