@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  password     String
+  passwordSalt String
+  phone        String   @unique
+  gardens      Garden[] @relation("UserGardens")
+
+  @@index([email])
+  @@index([phone])
+}
+
+model Garden {
+  id        String   @id @default(cuid())
+  name      String
+  userId    String
+  lat       Float
+  lng       Float
+  imgUrl    String
+  cep       String
+  number    Int
+  createdAt DateTime @default(now())
+  tamanhoM2 Int
+  deviceId  String?   @unique
+
+  owner  User          @relation("UserGardens", fields: [userId], references: [id])
+  plants PlantGarden[]
+
+  @@unique([lat, lng])
+  @@unique([cep, number])
+  @@index([userId])
+}
+
+model Plant {
+  id             Int           @id @default(autoincrement())
+  nomeComum      String
+  nomeCientifico String        @unique
+  umidadeMin     Int
+  umidadeMax     Int
+  tempMin        Int
+  tempMax        Int
+  gardens        PlantGarden[]
+
+  @@index([nomeCientifico])
+}
+
+model PlantGarden {
+  id          String   @id @default(cuid())
+  plantId     Int
+  gardenId    String
+  quant       Int
+  dataPlantio DateTime
+
+  plant  Plant  @relation(fields: [plantId], references: [id])
+  garden Garden @relation(fields: [gardenId], references: [id])
+
+  @@unique([plantId, gardenId])
+  @@index([plantId])
+  @@index([gardenId])
+}
