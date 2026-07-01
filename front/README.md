@@ -13,7 +13,7 @@ Antes de começar, verifique se você atendeu aos seguintes requisitos:
 
 - Você instalou a versão mais recente de `node.js / npm / Vscode`
 - Você tem uma máquina `<Windows / Linux / Mac>`.
-- Você baixou a api `https://github.com/DaniloAlvesantos/EcoGarden.git`.
+- Você baixou a api `https://github.com/DaniloAlvesantos/EcoGarden-front.git`.
 
 ## 🚀 Instalando EcoGarden (front-end)
 
@@ -22,7 +22,7 @@ Para instalar o EcoGarden, siga estas etapas:
 Fork:
 
 ```
-git clone https://github.com/DaniloAlvesantos/EcoGarden.git
+git clone https://github.com/DaniloAlvesantos/EcoGarden-front.git
 ```
 
 Instalação de dependências
@@ -62,18 +62,10 @@ Agradecemos às seguintes pessoas que contribuíram para este projeto:
       </a>
     </td>
     <td align="center">
-      <a href="#" title="defina o título do link">
-        <img src="https://miro.medium.com/max/360/0*1SkS3mSorArvY9kS.jpg" width="100px;" alt="Foto do Steve Jobs"/><br>
+      <a href="https://github.com/leandro10santos" title="defina o título do link">
+        <img src="https://avatars.githubusercontent.com/u/179064820?v=4" width="100px;" alt="Foto do Steve Jobs"/><br>
         <sub>
           <b>Leandro Santos</b>
-        </sub>
-      </a>
-    </td>
-     <td align="center">
-      <a href="#" title="defina o título do link">
-        <img src="https://miro.medium.com/max/360/0*1SkS3mSorArvY9kS.jpg" width="100px;" alt="Foto do Steve Jobs"/><br>
-        <sub>
-          <b>Izac Gomes</b>
         </sub>
       </a>
     </td>
